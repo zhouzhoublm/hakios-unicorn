@@ -7,14 +7,19 @@ requires_kernel_header = true
 #
 # UEFI FD Configs
 #
-# 0xA7100000 / 0x300000 is the SM8475 "uefi region": the same base the Xiaomi 12S port uses, and the
-# one this phone's own tree corroborates -- Android's ramoops takes 0xA7000000 + 0x400000 (4 MiB) on
-# unicorn (xiaomi-sm8475-common.dtsi: ramoops@0xa7000000), i.e. the region the bootloader loads a UEFI
-# image into and hands to the system afterwards. The FD lives at its top 3 MiB, exactly as on mayfly.
-# The region is marked "UEFI FD" in Library/MemoryMapLib/MemoryMapLib.c, so UEFI keeps it for itself.
+# 0xA8400000 / 0x300000 -- measured on this phone, 2026-11-07.
+#
+# The 12S port uses 0xA7100000 (the top 3 MiB of the 4 MiB "uefi region" at 0xA7000000 that this
+# phone's own tree marks "reusable by apps"). On this phone that address is not ours: a BootShim that
+# copies 3 MiB of firmware volume there resets the phone before any firmware code runs, while the same
+# copy to 0xA8400000 (4 MiB into the platform's "Kernel" region, above the boot image ABL unpacks) runs
+# and loops happily. Every number here is from a probe run on the phone with docs/BUILD.md's method;
+# the probe's framebuffer band at 0xB8000000 (inherited from the 12S) was also confirmed on screen.
+#
+# The FD lands in `MemoryMapLib`'s "Kernel" entry (0xA8000000 + 0x10000000, Reserv), so UEFI keeps off it.
 #
 [uefi_fd]
-base = 0xA7100000
+base = 0xA8400000
 size = 0x300000
 
 #
