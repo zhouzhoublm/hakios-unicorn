@@ -201,8 +201,9 @@ UsbSerialGetDescriptor (
   }
 
   if (Desc == NULL) {
-    /* e.g. the device_qualifier of a high speed only device */
-    mUsbfn->SetEndpointStallState (mUsbfn, 0, EfiUsbEndpointDirectionDeviceTx, TRUE);
+    /* e.g. the device_qualifier of a high speed only device: the state is in/out, hence the pointer */
+    BOOLEAN Stall = TRUE;
+    mUsbfn->SetEndpointStallState (mUsbfn, 0, EfiUsbEndpointDirectionDeviceTx, &Stall);
     return;
   }
   if ((Want != 0) && (Want < Length)) {
