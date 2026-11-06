@@ -99,6 +99,12 @@ STATIC EFI_USB_DEVICE_INFO           mDeviceInfo;
 
 /* ------------------------------------------------------------------------ */
 
+STATIC
+VOID
+UsbSerialHandleSetup (
+  IN EFI_USB_DEVICE_REQUEST  *Request
+  );
+
 VOID
 UsbSerialPump (
   VOID
@@ -120,6 +126,11 @@ UsbSerialPump (
     }
 
     switch (Message) {
+      case EfiUsbMsgSetupPacket:
+        /* the class requests are ours; the controller driver answers SET_ADDRESS and the status stage */
+        UsbSerialHandleSetup (&Payload.udr);
+        break;
+
       case EfiUsbMsgEndpointStatusChangedTx:
         if (Payload.utr.EndpointIndex == USBSER_EP_DATA) {
           mTxBusy = FALSE;
