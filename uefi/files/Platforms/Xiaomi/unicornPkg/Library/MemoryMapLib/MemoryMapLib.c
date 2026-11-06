@@ -60,6 +60,12 @@ gMemoryDescriptor[] = {
   {"IMEM Cookie Base",   0x146AA000, 0x00016000, AddDev, MMAP_IO, INITIALIZED, Conv,   NS_DEVICE},
 
   // Register Regions
+  //
+  // GCC: the clock/power controller at 0x00100000. It is not a Qualcomm "register region" in the original
+  // map because the blob-free boot never touched it — the USB function work does (USB30 GDSC, the USB
+  // clocks, the QUP votes and the eUSB2 PHY resets all live here, docs/USB-BRINGUP.md §4). Unmapped MMIO
+  // in UEFI is a synchronous abort, not a read of zeros, so it has to be declared.
+  {"GCC",                0x00100000, 0x00100000, AddDev, MMAP_IO, INITIALIZED, Conv,   NS_DEVICE},
   {"IPC_ROUTER_TOP",     0x00400000, 0x00100000, AddDev, MMAP_IO, UNCACHEABLE, MmIO,   NS_DEVICE},
   {"SECURITY CONTROL",   0x00780000, 0x00007000, AddDev, MMAP_IO, UNCACHEABLE, MmIO,   NS_DEVICE},
   {"QUP",                0x00800000, 0x00300000, AddDev, MMAP_IO, UNCACHEABLE, MmIO,   NS_DEVICE},
