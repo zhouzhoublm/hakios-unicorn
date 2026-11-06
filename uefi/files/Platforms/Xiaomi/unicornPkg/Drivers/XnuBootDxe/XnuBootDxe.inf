@@ -1,0 +1,33 @@
+## @file
+#  Start the XNU loader from the XNUP payload in RAM.
+#
+#  BDS on this phone ends in its own empty Boot Manager menu instead of the "unable to boot" path that
+#  hakios-uefi's BootManager.c uses for the handoff, so the loader was never started. This driver does the
+#  handoff at the end of DXE dispatch instead: see XnuBootDxe.c and docs/LOG-CHANNELS.md.
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = XnuBootDxe
+  FILE_GUID                      = A1E4C6B2-7D3F-4B58-9C21-6E8A2F4D9B07
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = InitXnuBoot
+
+[Sources]
+  XnuBootDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  unicornPkg/unicornPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+
+[Depex]
+  TRUE

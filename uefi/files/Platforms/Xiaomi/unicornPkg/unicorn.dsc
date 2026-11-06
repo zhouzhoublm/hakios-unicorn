@@ -99,6 +99,11 @@
   #
   unicornPkg/Drivers/UsbSerialDxe/UsbSerialDxe.inf
 
+  #
+  # Hand the machine over to the XNU loader as soon as DXE is done (BDS never gets there on this phone)
+  #
+  unicornPkg/Drivers/XnuBootDxe/XnuBootDxe.inf
+
 [BuildOptions]
   # Same as mkxnuimg.py (payload_base) and the loader's LOADER_CFLAGS
   *_*_*_CC_FLAGS = -DXNU_PAYLOAD_BASE=0xB0000000ULL

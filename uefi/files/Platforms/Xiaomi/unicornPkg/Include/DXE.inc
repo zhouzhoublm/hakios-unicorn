@@ -60,3 +60,9 @@
   #
   INF unicornPkg/Drivers/UsbSerialDxe/UsbSerialDxe.inf
 
+  #
+  # Last: hand over to the XNU loader from the XNUP payload in RAM. BDS on this phone stops at its own empty
+  # Boot Manager menu and never reaches the "unable to boot" path the handoff used to live in.
+  #
+  INF unicornPkg/Drivers/XnuBootDxe/XnuBootDxe.inf
+
