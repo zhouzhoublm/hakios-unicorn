@@ -172,13 +172,13 @@ Dwc3ConfigureEnableEndpoints (
 
   Status = Dwc3EnableEndpoint (Dev, DWC3_EP0_OUT, DWC3_DEPCMD_TYPE_CONTROL, MaxPacketSize, FALSE);
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "DWC3: Failed to configure EP0 OUT! Status = %r\n", Status));
+    DEBUG ((DEBUG_ERROR, "DWC3: Failed to configure EP0 OUT! Status = %r\n", Status));
     return Status;
   }
 
   Status = Dwc3EnableEndpoint (Dev, DWC3_EP0_IN, DWC3_DEPCMD_TYPE_CONTROL, MaxPacketSize, FALSE);
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "DWC3: Failed to configure EP0 IN! Status = %r\n", Status));
+    DEBUG ((DEBUG_ERROR, "DWC3: Failed to configure EP0 IN! Status = %r\n", Status));
     return Status;
   }
 
@@ -190,7 +190,7 @@ Dwc3ConfigureEnableEndpoints (
     }
 
     if ((EpDesc->Attributes & USB_ENDPOINT_TYPE_MASK) != USB_ENDPOINT_BULK) {
-      DEBUG ((EFI_D_ERROR, "DWC3: Endpoint 0x%02x is not Bulk!\n", EpDesc->EndpointAddress));
+      DEBUG ((DEBUG_ERROR, "DWC3: Endpoint 0x%02x is not Bulk!\n", EpDesc->EndpointAddress));
       return EFI_UNSUPPORTED;
     }
 
@@ -206,7 +206,7 @@ Dwc3ConfigureEnableEndpoints (
 
     Status = Dwc3EnableEndpoint (Dev, PhysEpNum, EpType, MaxPacketSize, FALSE);
     if (EFI_ERROR (Status)) {
-      DEBUG ((EFI_D_ERROR, "DWC3: Failed to configure Physical EP %u! Status = %r\n", PhysEpNum, Status));
+      DEBUG ((DEBUG_ERROR, "DWC3: Failed to configure Physical EP %u! Status = %r\n", PhysEpNum, Status));
       return Status;
     }
   }
@@ -506,7 +506,7 @@ Dwc3Transfer (
   Endpoint = &Dev->Endpoints[PhysEpNum];
 
   if (!Endpoint->Enabled) {
-    DEBUG ((EFI_D_ERROR, "DWC3: Physical EP %u is not configured\n", PhysEpNum));
+    DEBUG ((DEBUG_ERROR, "DWC3: Physical EP %u is not configured\n", PhysEpNum));
     return EFI_NOT_READY;
   }
 
@@ -515,7 +515,7 @@ Dwc3Transfer (
   }
 
   if (Endpoint->TransferStarted && PhysEpNum > DWC3_EP0_IN) {
-    DEBUG ((EFI_D_ERROR, "DWC3: Physical EP %u already has a transfer in progress\n", PhysEpNum));
+    DEBUG ((DEBUG_ERROR, "DWC3: Physical EP %u already has a transfer in progress\n", PhysEpNum));
     return EFI_NOT_READY;
   }
 
@@ -696,7 +696,7 @@ Dwc3StartController (IN EFI_USBFN_IO_PROTOCOL *This)
 
   Status = UsbfnPlatformPhyInit ();
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "DWC3: Failed to initialise the USB PHY! Status = %r\n", Status));
+    DEBUG ((DEBUG_ERROR, "DWC3: Failed to initialise the USB PHY! Status = %r\n", Status));
     return Status;
   }
 
@@ -903,7 +903,7 @@ InitUsbfnDwc3Driver (
 
   Status = UsbfnPlatformGetData (&Dev->Platform);
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "DWC3: Unsupported platform! Status = %r\n", Status));
+    DEBUG ((DEBUG_ERROR, "DWC3: Unsupported platform! Status = %r\n", Status));
     FreePool (Dev);
     return Status;
   }
@@ -967,7 +967,7 @@ InitUsbfnDwc3Driver (
   Dwc3BuildSerialNumber();
 
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "Failed to install USB Function IO Protocol! Status = %r\n", Status));
+    DEBUG ((DEBUG_ERROR, "Failed to install USB Function IO Protocol! Status = %r\n", Status));
     goto Failure;
   }
 

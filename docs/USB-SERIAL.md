@@ -65,9 +65,15 @@ In `unicornPkg` (firmware) — done:
    licence stated there; the only changes are the package list and the dropped ChipInfo dependency).
    Listed in `Include/DXE.inc` and `unicorn.dsc` `[Components]`.
 2. `Library/PlatformUsbfnLib/` — our four functions, `unicorn.dsc` `[LibraryClasses]`.
-   `Include/Device/Dwc3.h` and `Include/Library/PlatformUsbfnLib.h` are published through `unicorn.dec`
-   `[Includes]`, which until now was an empty package description.
-3. `USE_CUSTOM_DISPLAY_DRIVER = 0` and `SimpleFbDxe` unchanged: the screen stays the second channel.
+   `Include/Device/Dwc3.h` and `Include/Library/PlatformUsbfnLib.h` are published through the package
+   description, which had to be **renamed `unicorn.dec` → `unicornPkg.dec`** and given `[Includes] Include`:
+   EDK2 finds a package's description as `<dir>/<dir>.dec`, and CI run #24 failed on exactly that
+   (`UsbfnDwc3Dxe.inf(29): File/directory not found in workspace`).
+3. `Drivers/UsbSerialDxe/` — the class: a CDC ACM console on top of `EFI_USBFN_IO_PROTOCOL`, installed as
+   `EFI_SERIAL_IO_PROTOCOL` and serviced from a periodic timer. This is the piece that actually produces
+   the serial port, and it lives in the firmware on purpose: the loader's own USB path needs Qualcomm's
+   device protocol, while this needs nothing but what `UsbfnDwc3Dxe` provides.
+4. `USE_CUSTOM_DISPLAY_DRIVER = 0` and `SimpleFbDxe` unchanged: the screen stays the second channel.
 
 In the loader (common repository) — written, to be copied in:
 4. `xnuloader/usbfn.c` (delivered in this repository) — CDC ACM class over `EFI_USBFN_IO_PROTOCOL`:

@@ -26,7 +26,7 @@ Dwc3AllocateDmaBuffer (
 
   Status = gDS->SetMemorySpaceAttributes ((EFI_PHYSICAL_ADDRESS)(UINTN)Buffer, EFI_PAGES_TO_SIZE (Pages), EFI_MEMORY_UC);
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "DWC3: Failed to set memory attribs! Status = %r\n", Status));
+    DEBUG ((DEBUG_ERROR, "DWC3: Failed to set memory attribs! Status = %r\n", Status));
     FreeAlignedPages (Buffer, Pages);
     return NULL;
   }
@@ -101,7 +101,7 @@ Dwc3SoftReset (IN DWC3_DEV *Dev)
     gBS->Stall (1);
   }
 
-  DEBUG ((EFI_D_ERROR, "DWC3: Core Soft Reset timed out!\n"));
+  DEBUG ((DEBUG_ERROR, "DWC3: Core Soft Reset timed out!\n"));
 
   return EFI_DEVICE_ERROR;
 }
@@ -216,7 +216,7 @@ Dwc3RunStop (
     gBS->Stall (1);
   }
 
-  DEBUG ((EFI_D_ERROR, "DWC3: %a timed out! DSTS = 0x%08x\n", Run ? "Run" : "Stop", Register));
+  DEBUG ((DEBUG_ERROR, "DWC3: %a timed out! DSTS = 0x%08x\n", Run ? "Run" : "Stop", Register));
 
   return EFI_DEVICE_ERROR;
 }
@@ -233,7 +233,7 @@ Dwc3CoreInit (IN DWC3_DEV *Dev)
   if ((Register & DWC3_GSNPSID_MASK) != DWC3_GSNPSID_USB3 &&
       (Register & DWC3_GSNPSID_MASK) != DWC3_GSNPSID_USB31)
   {
-    DEBUG ((EFI_D_ERROR, "DWC3: Bad Synopsys ID 0x%08x!\n", Register));
+    DEBUG ((DEBUG_ERROR, "DWC3: Bad Synopsys ID 0x%08x!\n", Register));
     ASSERT (FALSE);
   }
 

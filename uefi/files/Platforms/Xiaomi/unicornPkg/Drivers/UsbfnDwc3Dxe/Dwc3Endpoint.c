@@ -20,7 +20,7 @@ Dwc3PushMessage (
   UINT32 Next = (Dev->MessageTail + 1) % DWC3_MESSAGE_QUEUE_DEPTH;
 
   if (Next == Dev->MessageHead) {
-    DEBUG ((EFI_D_ERROR, "DWC3: Message Queue Overflow, dropping Message %u!\n", Message));
+    DEBUG ((DEBUG_ERROR, "DWC3: Message Queue Overflow, dropping Message %u!\n", Message));
     return;
   }
 
@@ -106,7 +106,7 @@ Dwc3SendEpCommand (
       }
 
       if (CommandStatus != 0) {
-        DEBUG ((EFI_D_ERROR, "DWC3: Endpoint Command 0x%x on Physical EP %u failed with Status %u!\n", DWC3_DEPCMD_CMD (Command), PhysEpNum, CommandStatus));
+        DEBUG ((DEBUG_ERROR, "DWC3: Endpoint Command 0x%x on Physical EP %u failed with Status %u!\n", DWC3_DEPCMD_CMD (Command), PhysEpNum, CommandStatus));
         return EFI_DEVICE_ERROR;
       }
 
@@ -116,7 +116,7 @@ Dwc3SendEpCommand (
     gBS->Stall (1);
   }
 
-  DEBUG ((EFI_D_ERROR, "DWC3: Endpoint Command 0x%x on Physical EP %u timed out!\n", DWC3_DEPCMD_CMD (Command), PhysEpNum));
+  DEBUG ((DEBUG_ERROR, "DWC3: Endpoint Command 0x%x on Physical EP %u timed out!\n", DWC3_DEPCMD_CMD (Command), PhysEpNum));
 
   return EFI_TIMEOUT;
 }
@@ -325,7 +325,7 @@ Dwc3StartTransfer (
   }
 
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "DWC3: STARTTRANSFER failed on Physical EP %u, TrbType 0x%x Len %u RscIdx %u Ep0State %u\n",
+    DEBUG ((DEBUG_ERROR, "DWC3: STARTTRANSFER failed on Physical EP %u, TrbType 0x%x Len %u RscIdx %u Ep0State %u\n",
             PhysEpNum, TrbType, Length, Endpoint->ResourceIndex, Dev->Ep0State));
     Trb->Control = 0;
     return Status;
@@ -589,7 +589,7 @@ Dwc3HandleEp0Event (
       switch (DEPEVT_STATUS_CONTROL_PHASE (EventStatus)) {
         case DEPEVT_STATUS_CONTROL_DATA:
           if ((PhysEpNum == DWC3_EP0_IN) != Dev->Ep0ExpectIn) {
-            DEBUG ((EFI_D_ERROR, "DWC3: Unexpected Direction for the EP0 Data Stage!\n"));
+            DEBUG ((DEBUG_ERROR, "DWC3: Unexpected Direction for the EP0 Data Stage!\n"));
             Dwc3EndTransfer (Dev, Dev->Ep0ExpectIn ? DWC3_EP0_IN : DWC3_EP0_OUT);
             Dwc3Ep0StallAndRestart (Dev);
           }
@@ -797,7 +797,7 @@ Dwc3HandleDeviceEvent (
       break;
 
     case DWC3_DEVICE_EVENT_OVERFLOW:
-      DEBUG ((EFI_D_ERROR, "DWC3: Event Buffer Overflow!\n"));
+      DEBUG ((DEBUG_ERROR, "DWC3: Event Buffer Overflow!\n"));
       break;
 
     default:
@@ -833,7 +833,7 @@ Dwc3ProcessEvents (IN DWC3_DEV *Dev)
     } else if (DWC3_DEVT_CATEGORY (Event) == DWC3_EVENT_TYPE_DEV) {
       Dwc3HandleDeviceEvent (Dev, Event);
     } else {
-      DEBUG ((EFI_D_ERROR, "DWC3: Unknown Event 0x%08x\n", Event));
+      DEBUG ((DEBUG_ERROR, "DWC3: Unknown Event 0x%08x\n", Event));
     }
 
     if (Dev->MessageHead != Dev->MessageTail) {
