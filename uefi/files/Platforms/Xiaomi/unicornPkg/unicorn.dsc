@@ -44,16 +44,16 @@
   # SMBIOS
   #
   gSiliciumPkgTokenSpaceGuid.PcdSmbiosSystemManufacturer|"Xiaomi"
-  gSiliciumPkgTokenSpaceGuid.PcdSmbiosSystemModel|"Xiaomi 12S"
+  gSiliciumPkgTokenSpaceGuid.PcdSmbiosSystemModel|"Xiaomi 12S Pro"
   gSiliciumPkgTokenSpaceGuid.PcdSmbiosSystemRetailModel|"unicorn"
-  gSiliciumPkgTokenSpaceGuid.PcdSmbiosSystemRetailSku|"Xiaomi_12S_unicorn"
-  gSiliciumPkgTokenSpaceGuid.PcdSmbiosSystemBoardModel|"Xiaomi 12S"
+  gSiliciumPkgTokenSpaceGuid.PcdSmbiosSystemRetailSku|"Xiaomi_12S_Pro_unicorn"
+  gSiliciumPkgTokenSpaceGuid.PcdSmbiosSystemBoardModel|"Xiaomi 12S Pro"
 
   #
-  # Simple Frame Buffer
+  # Simple Frame Buffer: the panel is WQHD+ 1440x3200 ("l2s", see docs/FINDINGS.md)
   #
-  gSiliciumPkgTokenSpaceGuid.PcdFrameBufferWidth|1080
-  gSiliciumPkgTokenSpaceGuid.PcdFrameBufferHeight|2400
+  gSiliciumPkgTokenSpaceGuid.PcdFrameBufferWidth|1440
+  gSiliciumPkgTokenSpaceGuid.PcdFrameBufferHeight|3200
   gSiliciumPkgTokenSpaceGuid.PcdFrameBufferColorDepth|32
   gSiliciumPkgTokenSpaceGuid.PcdFrameBufferDelay|0
 
@@ -86,4 +86,4 @@
 
 [BuildOptions]
   # Same as mkxnuimg.py (payload_base) and the loader's LOADER_CFLAGS
-  *_*_*_CC_FLAGS = -DXNU_PAYLOAD_BASE=0xBB000000ULL
+  *_*_*_CC_FLAGS = -DXNU_PAYLOAD_BASE=0xB0000000ULL

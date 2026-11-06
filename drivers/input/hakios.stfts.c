@@ -1,5 +1,5 @@
 /*
- * The touch screen of the Xiaomi 12S (mayfly): an STMicroelectronics FingerTip ("FTS", FTM5 family, the
+ * The touch screen of the Xiaomi 12S Pro (unicorn): an STMicroelectronics FingerTip ("FTS", FTM5 family, the
  * vendor's "SALIXP" variant) on the SPI bus of the SoC's serial engine 4, as a source of touches for
  * /dev/hakios-touch (sys/hakios.input.h). Only with boot-arg touchscreen=1: every address below
  * belongs to this phone.
@@ -18,7 +18,7 @@
  * The chip keeps its own firmware in its own flash; this driver never writes to that flash.
  *
  * Where the numbers come from (none of them measured on the phone yet):
- *   the phone's device tree (LineageOS android_kernel_xiaomi_sm8450-devicetrees, mayfly-sm8475.dtsi,
+ *   the phone's device tree (LineageOS android_kernel_xiaomi_sm8450-devicetrees, unicorn-sm8475.dtsi,
  *     waipio-qupv3.dtsi, cape-regulators.dtsi, waipio.dtsi): spi@990000, fts@0 "st,spi", gpio 16-21,
  *     avdd-supply = L7C (3.2 V on this phone), vdd-supply = L2C, apps_rsc drv-2 at 0x17a20000 with
  *     its command slots at 0xd00, cmd-db at 0x80860000, "fts,x-max" 10800 and "fts,y-max" 24000 with
@@ -252,7 +252,7 @@ rpmh_write(const uint32_t *address, const uint32_t *data, unsigned count)
  * blocks are not mapped yet, which is to say touch has not come up.
  */
 bool
-hakios_mayfly_vreg_on(const char *name, uint32_t millivolts, bool high_power)
+hakios_unicorn_vreg_on(const char *name, uint32_t millivolts, bool high_power)
 {
 	uint32_t base, address[3], data[3];
 
@@ -275,7 +275,7 @@ hakios_mayfly_vreg_on(const char *name, uint32_t millivolts, bool high_power)
  * on for this processor. A command is commit, valid, average and peak, 14 bits each.
  */
 bool
-hakios_mayfly_memory_fast(uint32_t vote)
+hakios_unicorn_memory_fast(uint32_t vote)
 {
 	uint32_t mc0, sh0, acv, address[3], data[3], command;
 
@@ -564,7 +564,7 @@ geni_recover(void)
 }
 
 /*
- * SPI by hand on the same pins, for when the serial engine cannot be driven from here: mayfly's TrustZone
+ * SPI by hand on the same pins, for when the serial engine cannot be driven from here: unicorn's TrustZone
  * loads engine 4's firmware with the FIFO interface disabled (GENI_IF_DISABLE_RO), so Android reaches it only
  * through GPI DMA. Mode 0: the clock idles low, both sides change data while it is low and sample on the rising
  * edge. A pin write takes a few hundred nanoseconds, so the bus runs at a few hundred kHz, which is plenty for

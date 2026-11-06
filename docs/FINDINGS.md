@@ -1,170 +1,144 @@
-# Xiaomi 12S (mayfly) — hardware findings
+# Xiaomi 12S Pro (unicorn) — hardware findings
 
-Everything here was measured on a real phone (model 2206123SC, HyperOS 2 / OS2.0.207.0.VLTCNXM, Android 15)
-unless it says otherwise. Addresses are physical. "Android" means values read from the stock system with root.
+Two kinds of statement are in this file, and they are kept apart on purpose:
 
-## The phone
+- **from the phone's own source** — read out of the Xiaomi SM8450 devicetree release (the `unicorn-*`
+  files and the cape/waipio platform trees they include), quoted with file and node. This is what the
+  phone is, as far as the Android that ships on it is concerned.
+- **inherited from the 12S port** — measured on a Xiaomi 12S (mayfly), the same SM8475/cape platform, by
+  [cotunjr/hakios-mayfly](https://github.com/cotunjr/hakios-mayfly). It is a strong expectation, not a
+  measurement of this phone: each item says what would confirm it here.
+
+Nothing has been run on this phone yet (2026-11-06).
+
+## The phone, from its own source
 
 | | |
 |---|---|
-| SoC | SM8475 (Snapdragon 8+ Gen 1, "cape"), waipio family; Linux treats it as sm8450 |
-| CPU | 8 cores: 0-3 little, 4-6 big, 7 prime; MPIDR aff1; PSCI 1.1; 16K pages work |
-| GIC | GICv3 at 0x17100000; **redistributor stride is GICv4-sized** (see gic_v3_irq.c); Gunyah aborts accesses to other CPUs' GICR frames, so a non-zero boot CPU must go straight to its own frame |
-| Memory | low DDR + "RAM High" 0x840000000, ~9 GB free above it |
-| Display | 1080x2400 panel "l3s", DSC **command mode**, ABL leaves a live framebuffer at 0xB8000000, stride 4320 (`Display Reserved` 0xB8000000/0x2B00000) |
-| Touch | ST FingerTip FTS (FTM5, "SALIXP"), SPI on QUP SE4 — **not** Goodix, not FocalTech |
-| GPU | Adreno 730 v3, chip id 0x07030002 (Mesa calls it FD725), a7xx |
-| Wi-Fi/BT | QCA6490: Wi-Fi on PCIe (17cb:1103), BT on UART QUP SE20 |
-| Speakers | 2× Awinic AW88261 on I2C SE15 (gpio56/57), addresses 0x34 (top), 0x35 (bottom) |
-| Haptics | PM8350B `qcom,hv-haptics@f000` (SPMI), f0 = 173 Hz |
-| UFS | controller 0x1D84000 |
+| SoC | SM8475 (Snapdragon 8+ Gen 1, "cape"), waipio family; Linux treats it as sm8450. `unicorn-sm8475-pm8008-overlay.dts`: `compatible = "qcom,cape-mtp", "qcom,cape", "qcom,mtp"`, `qcom,msm-id = <530 0x10000>, <531 0x10000>, <540 0x10000>`, `qcom,board-id = <0x10008 0>`, `xiaomi,miboard-id = <0x8 0>` |
+| CPU | 8 cores in MPIDR's second affinity field: 0-3 little, 4-6 big, 7 prime (cape platform tree) |
+| GIC | GICv3 at **0x17100000**, its MSI controller at 0x17140000 (`cape.dtsi`, `interrupt-controller@17100000`) |
+| Display | **WQHD+ 1440x3200** DSC **command mode**, panel family **"l2s"** — `unicorn-sde-display-mtp.dtsi` names two builds, `dsi_l2s_38_0c_0a_dsc_cmd` and `dsi_l2s_42_02_0b_dsc_cmd`, both with WQHD timings at 1/10/24/30/40/60/90/120 Hz and `qcom,display-topology = <2 2 1>` |
+| Panel rails | vci 3.0 V on gpio75, vddio 1.8 V on gpio74, vddd 1.5 V on gpio25, reset on gpio0 (`unicorn-sde-display-mtp.dtsi`, `display_panel_v*`) |
+| Brightness | DCS (`bl_ctrl_dcs`), 8..2047, inverted DBV, init 307 |
+| Touch | **ST FingerTip (FTS)**, `st,spi`, on **SPI QUP SE4**: irq gpio21, reset gpio20, `fts,x-max = <14400>`, `fts,y-max = <32000>` (16-bit super-resolution), 12 MHz, firmware `st_fts_l1.ftb`, avdd L9C 3.224 V, vdd L2C 1.8 V, panel vdd rail switched from gpio97 (`unicorn-sm8475.dtsi`, `&qupv3_se4_spi` / `fts@0`) |
+| Amplifiers | **2x Cirrus CS35L41** on I2C **SE15**: `cs35l41@40` (right channel, reset gpio120, irq gpio117) and `cs35l41@43` (top, reset gpio1, speaker switch gpio52, irq gpio88) (`unicorn-sm8475.dtsi`, `&qupv3_se15_i2c`) |
+| Haptics | Awinic **AW8697** on I2C **SE18**, 0x5a, reset gpio89, irq gpio90; the PMIC's own hv-haptics is disabled (`unicorn-sm8475.dtsi`) |
+| Fingerprint | Goodix, reset gpio41, irq gpio40, 3.008 V from L11C |
+| Wi-Fi | **QCA6490** on PCIe, `qcom,cnss-qca6490@b0000000` (`cape.dtsi`) |
+| Bluetooth | **QCA6490** on UART **QUP SE20** (`hsuart0 = &qupv3_se20_4uart`), `bt-reset-gpio = <&tlmm 81>` = BT_EN (`cape.dtsi`, `bt_qca6490`) |
+| Storage | UFS host **0x1d84000**, `qcom,ufs-phy-qmp-v4-cape` PHY, rails L7B/L9B/L5B/L10C (`cape.dtsi`, `xiaomi-sm8475-common.dtsi`) |
+| USB | DWC3 at 0xa600000, eUSB2 with an **NXP repeater on I2C SE5 (0x4f)**, `param-override-seq` 0x62/0x08 0x00/0x07 (device), 0x63/0x08 0x22/0x07 (host) (`xiaomi-sm8475-common.dtsi`) |
+| NFC | ST St25 on I2C SE9 (0x28), irq gpio46, ven gpio34 (`xiaomi-sm8475-common.dtsi`) |
+| SD card | `sdhc_2` with card detect on gpio92 |
 
-## Boot chain
+### The memory the bootloader reserves (cape platform, and so this phone)
 
-- ABL accepts our boot image only as **header v4** and with `os_version`/`os_patch_level` = 0.
-- The payload must be low: **0xB0000000** (in the "Kernel" region). The HakiOS default 0xF0000000 is inside
-  waipio's TZ apps (0xEA000000-0xF1400000): writing there resets the phone. Writing 0x840000000 from the shim also resets.
-- `fastboot boot` only, RAM boot. The loader cannot return the phone to ABL: hold power + volume down.
-- Phone-reset timing is a usable measuring channel: Android's adb appears exactly 14 s after a reset.
+`cape-reserved-memory.dtsi` and `xiaomi-sm8475-common.dtsi` give the carve-outs; the UEFI's own map
+(`uefi/files/Platforms/Xiaomi/unicornPkg/Library/MemoryMapLib/MemoryMapLib.c`) was checked against them:
 
-## UEFI
+| Region | Address | Size | Node |
+|---|---|---|---|
+| HYP | 0x80000000 | 0x600000 | `hyp_region@80000000` |
+| DT BLOB | 0x80600000 | 0x40000 | `xbl_dtlog_region@80600000` (where the bootloader's DT log goes; the DT itself is at 0x80600000 for Silicium) |
+| AOP | 0x80800000 | 0xA0000 | `aop_image_region` + `aop_cmd_db_region` (0x80860000) + `aop_config_region` (0x80880000) |
+| SMEM | 0x80900000 | 0x200000 | `smem_region@80900000` |
+| CPUC{P} | 0x80b00000 | 0x100000 | `cpucp_fw_region@80b00000` |
+| modem + remote processors | 0x85200000 | 0x1C200000 | the PIL carve-outs patchily: video 0x85700000, SLPI 0x88000000, CDSP 0x89900000, IPA 0x8b900000, SPSS 0x8ba00000, MPSS 0x8bc00000 + 0x13200000, CVP 0x9ee00000, camera 0x9f500000, **ADSP 0x9fd00000 + 0x3100000** |
+| xbl ramdump / xbl_sc / global sync | 0xa6b80000 / 0xa6e00000 / 0xa6f00000 | 0x280000 / 0x40000 / 0x100000 | `xbl_ramdump_region`, `xbl_sc_region`, `global_sync_region` |
+| **ramoops (the UEFI region, reused by apps)** | **0xa7000000** | **0x400000** | `ramoops@0xa7000000` in `xiaomi-sm8475-common.dtsi`; the tree marks the UEFI region "can be reused by apps" |
+| the Android side's QTEE/Gunyah block | 0xe0000000 … | | `qheebsp_reserved_region`, `cpusys_vm_region`, `hyp_reserved_region`, `trust_ui_vm_*` |
+| TZ stats / tags / QTEE | 0xe8800000 / 0xe8900000 / 0xe9b00000 | 0x100000 / 0x1200000 / 0x500000 | `tz_stat_region`, `tags_region`, `qtee_region` |
 
-- Vendor DXE drivers (from `uefi.elf`, `BOOT.MXF.2.0-01018.3-WAIPIO-1`, via UEFIReader patched for duplicate
-  modules) were a dead end:
-  - `ClockDxe` stops the panel scanning out (log freezes but CPUs keep running). Fast logs make it look like a
-    later driver (HALIOMMU) hangs because the next lines fit in one frame.
-  - `PmicDxe` takes a synchronous external abort at FAR 0x0C717008 (SPMI channel 0x217) through SPMI.dll.
-  - After those, a self-reset at ~29 s that is not ResetSystem.
-- **What works is blob-free** (like the K60 / uefi-mondrian ports): no vendor drivers at all, SimpleFbDxe on
-  ABL's framebuffer. Recipe in `uefi/patches/README.md`. The kernel and loader drive the hardware themselves.
-- ArmCpu's "CPU Vectors" region breaks the boot. Gunyah's watchdog SMC returns an error (harmless).
-- `xnuloader/mkidentity.sh` must be run for the real IPSW identity; `make loader` does not refresh the placeholder.
+Two consequences the port uses:
 
-## Storage (UFS)
+- **A UEFI image goes at 0xA7100000, 3 MiB** (`Resources/Configs/unicorn.toml`). The 4 MiB from
+  0xA7000000 is the region the bootloader loads a UEFI into and hands back to the system — Android puts
+  its ramoops there. That is the same base the 12S port uses, and it is *this* phone's own tree that
+  says the region is 4 MiB from 0xA7000000.
+- **The "XNUP" payload goes at 0xB0000000** (`unicornPkg/unicorn.dsc`, `-DXNU_PAYLOAD_BASE`), inside
+  the platform's "Kernel" region (see below).
 
-- ABL leaves the controller up (HCE=1) but **removes SID 0xE0 from the apps SMMU**: any UFS DMA faults
-  (USFCFG=1) and the phone resets ~20 s later.
-- Fix (loader, `mayfly_ufs_probe`): install a free SMR → the last context bank (74), CBAR 0x10000, CBA2R 1,
-  SCTLR 0 (bypass) — the same takeover the K60 port does.
-- The device is asleep: the first READ returns status 2. Send START STOP UNIT to LUN 0xD0 first.
-- The loader keeps its own UTP list at 0xA9000000 and serves `userdata` to the kernel as the Darwin disk.
+### The phone's own device tree, as this repository carries it
 
-## USB (loader only)
+`uefi/files/Resources/DTBs/unicorn.dtb` is **built from source, not pulled from the phone**:
 
-- ABL leaves GDSC, clocks and the eUSB2 PHY up, the DWC3 controller stopped.
-- Needed: QSCRATCH VBUS override (`0xa6f8810 |= bit20|bit28`, `0xa6f8830 |= bit24`), an apps SMMU SMR for
-  SID 0 → bypass bank, and DEPSTARTCFG's resource index in DEPCMD[22:16].
-- Images **must** be packed with `xnuloader/mkpayload.py --usb`, or the loader never shows up as `xnuloader`.
-- macOS asks once to allow the accessory "xnuloader".
+```sh
+# the Xiaomi SM8450 devicetree release (qcom/ + bindings/), and the kernel's dt-bindings headers
+cpp -nostdinc -undef -D__DTS__ -x assembler-with-cpp -I qcom -I . -I qcom/include -I <kernel>/include \
+    -I <kernel>/include/uapi qcom/cape.dts -o cape.dts && dtc -@ -I dts -O dtb -o cape.dtb cape.dts
+cpp ... qcom/unicorn-sm8475-pm8008-overlay.dts -o u.dts && dtc -@ -I dts -O dtb -o u.dtbo u.dts
+fdtoverlay -i cape.dtb -o unicorn.dtb u.dtbo
+```
 
-## CPU
+It is the cape platform tree with **unicorn's own board overlay** applied: touch, both amplifiers, the
+haptics, the PMIC rails and the thermal zones are in it, with `model = "Cape SoC"` and an empty
+`/memory` (the bootloader fills it — the Xiaomi 12S's own DT has the same placeholder, so this is the
+shape a boot DT has here, not a defect).
 
-- EPSS perf-state registers at 0x17d91000 / 0x17d92000 / 0x17d93000 + 0x320. The loader writes the top
-  non-boost LUT entry: 2016 / 2649 / 2995 MHz. `cpu_mhz=N` puts a ceiling on it.
-- Governor (kernel, adreno7.c): 30 s continuously above 90 °C → one step down, never above `cpu_mhz`.
-- TSENS controllers at 0xc263000 / 0xc265000, sensors at +0xa0 + 4n.
-- DDR bandwidth vote `ddr_vote` (default 0x3fff = max) is accepted (in stfts.c, `hakios_mayfly_memory_fast`).
+Two Android overlays are **not** applied: `unicorn-sde-display-mtp-overlay.dtbo` (the DSI panels, the
+SDE and the panel rails) and `unicorn-audio.dts` (the ALSA/ASoC graph). The display overlay does not
+apply to the reference base (`fdtoverlap: FDT_ERR_NOTFOUND` — it targets nodes only a DSI-enabled base
+carries), and neither is needed to start: HakiOS drives the panel and the DSP itself, and the UEFI draws
+on the framebuffer ABL leaves live. When the phone is rooted the real tree is two commands away and
+should replace this one:
 
-## Touch
+```sh
+adb pull /sys/firmware/fdt unicorn-live.dtb     # the running Android's tree: what the phone really is
+```
 
-- TZ loads GENI firmware on SE4 with the FIFO disabled (`GENI_IF_DISABLE_RO=1`; Android uses GPI DMA), so
-  SPI is **bit-banged on gpio16-19**, `touch_bitbang_ticks=4`.
-- Chip ID 36 40. Coordinates are **super-resolution 16-bit**: x = e3<<8 | e2, y = e5<<8 | e4, range 10800x24000
-  (verified by tapping corners; 12-bit is wrong).
+## Inherited from the 12S port (same SoC and platform) — to be confirmed here
 
-## Buttons
+Each of these was measured on mayfly and is expected to hold on unicorn because the ABL, the TZ and the
+SoC are the same. The confirmation for each is the same: **one boot, and the loader's log**.
 
-- PMIC arbiter v7: core 0xc400000/0x3000, cnfg 0xc42d000, observer 0xc440000 (+0x8000·ee + 0x20·apid),
-  map 0x2000 + 4n, owner cnfg + 4n.
+- **Boot image**: ABL accepts header **v4** with `os_version`/`os_patch_level` = 0; the payload must be
+  low. `0xF0000000` — HakiOS's default — is inside this family's TZ apps region (0xEA000000-0xF1400000
+  by the platform's carve-outs), where a write resets the phone; `0xB0000000` does not.
+- **GIC**: the redistributor stride is GICv4-sized, and Gunyah aborts accesses to another CPU's GICR
+  frame, so a non-zero boot CPU has to go straight to its own frame.
+- **Storage**: after ABL, the UFS controller is up (HCE=1) but SID 0xE0 is gone from the apps SMMU —
+  any DMA faults and the phone resets ~20 s later. The loader installs its own SMR/bank instead (the
+  same takeover the Redmi K60 port does) and serves `userdata` to the kernel.
+- **USB (loader only)**: ABL leaves the GDSC, clocks and the eUSB2 PHY up and the DWC3 stopped; the
+  loader needs the QSCRATCH VBUS overrides, an SMMU SMR for SID 0, and the DEPSTARTCFG resource index.
+  Images must be packed with `mkpayload.py --usb` or the loader never appears as `xnuloader`.
+- **CPU**: EPSS perf-state registers at 0x17d91000/0x17d92000/0x17d93000 + 0x320; the loader writes the
+  top non-boost LUT entry (2016/2649/2995 MHz). TSENS at 0xc263000/0xc265000, sensors at +0xa0 + 4n.
+- **Buttons**: PMIC arbiter v7 — core 0xc400000/0x3000, cnfg 0xc42d000, observer 0xc440000, map
+  0x2000 + 4n, owner cnfg + 4n.
+- **Display**: ABL leaves a live framebuffer at **0xB8000000** ("Display Reserved", 0x2B00000 in the
+  12S's map). Unicorn's panel is 1440 wide, so a frame is 1440x4 bytes/line x 3200 = 18.4 MB: one frame
+  fits the same reservation twice over, but **where ABL leaves the framebuffer on this phone, and how
+  big the reservation is, has to be read from the first log** (GOP: `fb_base`, `width`, `height`,
+  `stride`).
+- **UI composition**: the 12S port finds the MDP pipe whose SRC0_ADDR is the framebuffer among mdss
+  0xae00000 + 0x5000..0x2b000 and flips it by rewriting SRC0_ADDR; the same addresses are the cape
+  platform's.
+- **GPU**: Adreno 730 v3, chip id 0x07030002; TZ authenticates `a730_zap.mdt`; the GMU firmware is
+  `gmu_gen70000.bin`; the zap lands at 0x8b91a000 (which this phone's tree has as
+  `gpu_microcode_region@8b91a000`, 0x2000).
+- **Wi-Fi**: QCA6490 as `wcn6855 hw2.1` (`LX_CHIP=qca6490`), SMMU context 73 / stream 0x1c01, firmware
+  `amss20.bin`, `m3.bin`, `bd_l3s.elf`, `regdb_xiaomi.bin`, MAC from `persist:qca6490/wlan_mac.bin`.
+  **`bd_l3s.elf` is the 12S's board file** — unicorn's board data has to come out of its own firmware,
+  so this is one of the places where the 12S port cannot be copied as is.
+- **Bluetooth**: QCA6490 over the polled GENI UART on SE20, BT_EN gpio81, SW_CTRL gpio82 (this phone's
+  tree confirms 81; 82 is to be checked), rampatch `hpbtfw21.tlv`, NVM `hpnv21.bin`, in-band sleep.
+- **Audio**: ADSP firmware from the ROM's `NON-HLOS.bin`, relocated to `adsp_region` 0x9FD00000 +
+  0x3100000 (this phone's tree confirms the region); AudioReach/GPR over glink "adsp_apps"; IPCC
+  0xed18000, RSC 0x17a20000. **The amplifiers are the difference**: the 12S's AW88261 take I2S/TDM at
+  0x34/0x35 on SE15 with the switch on gpio52; unicorn's CS35L41 sit at 0x40/0x43 on the same bus and
+  also use gpio52 as the speaker switch. A driver of unicorn's own is needed.
 
-## Display
+## What the UEFI of this port is
 
-- Panel measured at 121 Hz with `panel_hz=120 fb_hz=120 ca_vbl=1`: autorefresh on every tear signal plus the
-  panel's own 120 Hz switch commands via DSI command DMA.
-- **Tearing fix (`fb_flip=1`)**: a second buffer at fb + 0xa00000 inside Display Reserved. The MDP pipe is found
-  by SRC0_ADDR (+0x14) == framebuffer PA among mdss 0xae00000 + 0x5000..0x2b000 (it is vig0, ctl 0); flip by
-  writing SRC0_ADDR and CTL_FLUSH (+0x18) on control paths that have layers; the flip is taken when the bit
-  clears (~1 ms). 63 → 94 frames/s.
-- Brightness: DCS 0x51, max 0x7ff.
-- iOS renders at 1125x2436 (the D22 identity) and is copied/scaled to 1080x2400; copy by runs takes 0.7 ms.
+Derived from the 12S platform, and blob-free (no Qualcomm DXE drivers), as that port found necessary:
 
-## GPU (Adreno 730)
-
-18 steps, all pass (`adreno7=18 adreno7_spin=1`):
-CX on → GMU clocks → GMU alive → GPU SMMU 0x3da0000 writable (through the hypervisor) → **TZ accepts
-`a730_zap.mdt`** (give it the whole mdt = header + hash segment 2) → GMU firmware `gmu_gen70000.bin` → RSCC
-sleep-then-wake like Linux (a plain wake gets ack 0) → HFI tables, perf/bw tables → OOB GPU_SET powers the
-3D core → CP start + `a7xx_cp_init` → zap at 0x8b91a000 → out of secure mode → GPU writes memory on command.
-
-Traps:
-- After `PAS_AUTH_AND_RESET` a blocking sleep of our thread never returned; spin waits work.
-- Map zap memory with `ml_io_map` and **never** `ml_io_unmap` it (permanent I/O maps panic, 16K pages).
-- Frequencies: 900/862/815/765/710/645/580/515/439/364/324/285/220 MHz; Android caps at 645. We default to
-  **580 MHz** (heat). `adreno7_speed` index 4 = 580, 5 = 645, 6 = 765, 7 = 816.
-- Mesa 25.0.7 needs patches in `tools/mesa/` (a725 cmdbuf start, a7xx fbfetch batch), `gmem_base=0`.
-- GPU time per frame is ~0.8 ms: the UI is **not** GPU-bound.
-
-## Wi-Fi (QCA6490)
-
-- PCIe Gen3 x1, 17cb:1103. SMMU context 73, stream 0x1c01 for the device.
-- MHI: BHI, MSI into RAM, BHIe, M0 → mission mode; QMI target memory must be **16 MB aligned** for pieces
-  > 2 MB, otherwise "memory ready" never comes (and aligning every piece runs the ring pool out).
-- ath11k must be built as WCN6855 hw2.1: `LX_CHIP=qca6490 tools/mk-ath11k.sh` (check the log for
-  "wcn6855 hw2.1"; the default is redwood's WCN6750).
-- `lx_bus.c`: `ab->mem_ce = ab->mem` or HTC never comes up.
-- The MAC must be given (`wifi_mac=`) from `persist:qca6490/wlan_mac.bin`.
-- Firmware: `amss20.bin`, `m3.bin`, `bd_l3s.elf`, `regdb_xiaomi.bin`.
-- About half of starts get no QMI answer or reset at bus start; a retry works (suspected race with the ADSP).
-
-## Bluetooth (QCA6490)
-
-- UART on QUP SE20 at 0x894000: gpio76 CTS, 77 RTS, 78 TX, 79 RX; BT_EN gpio81, SW_CTRL gpio82; same rails as Wi-Fi.
-- Polled GENI FIFO, no IRQ/DMA. Rampatch `hpbtfw21.tlv` (14 s at 115200), NVM `hpnv21.bin`. SoC 0x400c0210, ROM 0x201.
-- The chip sends **in-band sleep bytes** (0xfd repeated until the host answers 0xfc) even with the NVM sleep
-  bits cleared; unanswered, every event is blocked.
-- The address reads the NVM placeholder 00:00:00:00:5a:ad; set a real one (vendor 0xFC14) before pairing.
-- 115200 baud is not enough for A2DP: switch to 3 Mbaud.
-- iOS side: the bluetooth device-tree node **must be at the root** (GenericARMPE only makes nubs for root children;
-  under /arm-io bluetoothd says "No bluetooth"). A launchd job labelled `com.apple.*` running a non-platform
-  binary panics launchd: the BlueTool stand-in is `com.hakios.bluetool` with Mach service `com.apple.BlueTool`.
-- Audio needs Apple's `BTAudioHALPlugin.driver` where init binds the HAL plug-in directory, plus the
-  bluetoothuserd, BTAvrcp and BTServer.le jobs.
-
-## Audio
-
-- ADSP firmware from the ROM's `NON-HLOS.bin` (`adsp.mdt` + b01..b25), linked at 0x86300000, relocated to the DT
-  `adsp_region` 0x9fd00000/0x3100000. IPCC 0xed18000, RSC 0x17a20000.
-- mayfly is **AudioReach / GPR** over glink "adsp_apps" (not APR like redwood). Battery through PMIC_RTR_ADSP_APPS (battmgr).
-- PRM grants LPASS core + clocks; APM graph: WR_SHARED_MEM_EP → PCM_DEC → PCM_CNV → sink.
-- **The speaker fix:** the amplifiers need **TDM**, not I2S. MODULE_ID_TDM_SINK 0x0700100E, PARAM_ID_TDM_INTF_CFG
-  0x0800101B: tertiary, 4 slots × 32 bit, slot mask 3, internal sync, data out on, sync mode 1 (long), invert 1,
-  data delay 1; clock TER_TDM_IBIT 0x204 at 12.288 MHz (96 kHz). With I2S the amps lock their PLL, unmute, but
-  status stays 0x0011 forever (no SWS/BSTS: the output stage never switches).
-- Pins: tertiary MI2S/TDM gpio121 SCK, 123 WS, 124 data out (`sound_sd=2`), 122 is data **in** (amp feedback).
-  gpio52 (speaker switch) must be **LOW** for the speakers (high = handset path).
-- Android while playing: amp 01=0311, 23 (PVDD)=0x170, 0x27=1fc0. Idle defaults (21=0263, 22=0019, 23=0263,
-  28=1708, 29=0802) are what you read when the amp has not started: VBAT 0x263 is a reset value, not a measurement.
-- AW88261 I2C needs 25 kHz and two agreeing reads for config registers (not SYSST, not 0x20-0x29 which change while
-  playing); faults must be seen twice. Reads of 0x34 sometimes returned 0x35's values at higher speed.
-- `sound_gain=0`: iOS scales samples itself and the D22 chain is near full scale; +12 dB clipped (distorted sound).
-- Android's path: `TDM-LPAIF-RX-TERTIARY`, S32_LE, 96 kHz, 3 channels on the PCM. We run 48 kHz on the bus with
-  the amp at `speaker_sr=8`.
-
-## User space
-
-- `vmd` (visual voicemail) ate a whole core: denied in `mkjobs.py`.
-- 120 Hz in apps: inject `libhakios.fps` (sets `CADisableMinimumFrameDurationOnPhone`) into apps through the
-  kernel's `exec_inject "@apps"`, because the flashed root is Apple's and `mkhighrate.py` only changes system.apfs.
-- Dynamic Island (`island=1`) — all attempts failed, **do not ship island=1** (SpringBoard boot loop): interposing
-  MobileGestalt misses shared-cache calls; the MG cache file does not exist; inline-patching MG → SIGILL;
-  `SBUIIsSystemApertureEnabled=YES` via `dyld_dynamic_interpose` → SIGSEGV loop.
-
-## Build traps
-
-- `make kernel` does not always copy `devices/mayfly/drivers/gpu/hakios.adreno7.c` or headers under `xnu/files`
-  into `xnu-src`: copy by hand when in doubt.
-- `xnu/files/iokit/Kernel/MiniIOMobileFramebuffer.cpp` is an export copy; edit `xnu-src/.../iokit/Kernel/` and run
-  `xnu/export.sh` before committing.
-- `IO_MAP_SIZE` had to grow to 64 MB (`osfmk/arm/io_map.c`).
-- Build PATH needs `/opt/homebrew/opt/llvm/bin` (llvm-nm/objcopy) and brew `bison` 3.8 (Mesa). `unpack` needs
-  `7zz` (p7zip is too old); `dmg.py` needs python `lzfse`.
+- `MemoryMapLib.c` — the SM8475 platform map (above).
+- `unicorn.fdf` / `Include/*.inc` — Silicium's modules only; SimpleFbDxe on ABL's framebuffer
+  (`USE_CUSTOM_DISPLAY_DRIVER = 0`), no RamManagerDxe.
+- `unicorn.dsc` — DDR base 0x80000000, UEFI stack at 0xA760D000 (inside the reserved UEFI region),
+  SMBIOS says Xiaomi 12S Pro / unicorn, framebuffer 1440x3200, `PcdDebugPropertyMask 0x03` so an ASSERT
+  prints and carries on, and `-DXNU_PAYLOAD_BASE=0xB0000000ULL`.
+- `Resources/DTBs/unicorn.dtb` — the tree described above; `Resources/Configs/unicorn.toml` — FD base
+  and size, boot-image header v4, gzip, DTB appended.

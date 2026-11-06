@@ -1,1 +1,0 @@
-ls: /vendor/firmware/: Permission denied

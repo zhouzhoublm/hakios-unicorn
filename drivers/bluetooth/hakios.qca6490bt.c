@@ -1,5 +1,5 @@
 /*
- * Bluetooth half of the Xiaomi 12S's QCA6490, over its UART: the chip brought up and talking HCI. Boot-arg qcabt=N:
+ * Bluetooth half of the Xiaomi 12S Pro's QCA6490, over its UART: the chip brought up and talking HCI. Boot-arg qcabt=N:
  *
  *   1  clocks of QUP serial engine 20 on, what the engine is, how the pins stand (nothing goes to the chip)
  *   2  + the engine set up as a UART, in its internal loopback: bytes sent must come back (still nothing to the chip)
@@ -38,7 +38,7 @@ extern void thread_deallocate(thread_t thread);
 extern void IOSleep(unsigned milliseconds);
 extern void IODelay(unsigned microseconds);
 extern void loader_log_putc(char c);
-extern bool hakios_mayfly_vreg_on(const char *name, uint32_t millivolts, bool high_power);
+extern bool hakios_unicorn_vreg_on(const char *name, uint32_t millivolts, bool high_power);
 extern const uint8_t *hakios_image_file(const char *dir, const char *name, uint64_t *size, int *disk_out);
 
 void hakios_qcabt_init(void);
@@ -848,7 +848,7 @@ chip_power(void)
 		bool all = true;
 
 		for (unsigned i = 0; i < sizeof(rails) / sizeof(rails[0]); i++) {
-			all = hakios_mayfly_vreg_on(rails[i].name, rails[i].millivolts, false) && all;
+			all = hakios_unicorn_vreg_on(rails[i].name, rails[i].millivolts, false) && all;
 		}
 		if (all) {
 			break;

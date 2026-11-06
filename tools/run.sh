@@ -1,7 +1,7 @@
 #!/bin/zsh
 # usage: run.sh NAME [STOP_S]: boots xnu-NAME.img when ABL fastboot is there, runs, `oem stop` at STOP_S (default 60) while the kernel is alive, gets the full log
-N=$1; [[ -n "$N" && "$N" != */* && "$N" != .* ]] || { echo "usage: $0 NAME (a plain name: the log dir $T/NAME is wiped first)"; exit 2; }; STOP=${2:-60}; T=${LOGDIR:-$HOME/hakios-mayfly-logs}; mkdir -p $T; D=$T/$N; rm -rf $D; mkdir -p $D
-cd "$(cd "$(dirname "$0")" && pwd)/../../.."   # the top of hakios-xnu-kernel (this repo sits in devices/mayfly)
+N=$1; [[ -n "$N" && "$N" != */* && "$N" != .* ]] || { echo "usage: $0 NAME (a plain name: the log dir $T/NAME is wiped first)"; exit 2; }; STOP=${2:-60}; T=${LOGDIR:-$HOME/hakios-unicorn-logs}; mkdir -p $T; D=$T/$N; rm -rf $D; mkdir -p $D
+cd "$(cd "$(dirname "$0")" && pwd)/../../.."   # the top of hakios-xnu-kernel (this repo sits in devices/unicorn)
 until timeout 5 fastboot devices | grep -v xnuloader | grep -q fastboot; do sleep 1; done
 echo "boot $(date +%T)"; until fastboot boot xnu-$N.img 2>&1 | grep -q Finished; do sleep 2; done
 for i in {1..60}; do timeout 5 fastboot devices | grep -q xnuloader && break; sleep 1; done

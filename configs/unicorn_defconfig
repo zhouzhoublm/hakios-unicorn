@@ -1,4 +1,4 @@
-# HakiOS defconfig for the Xiaomi 12S (mayfly): the common kernel, the sm8450 family's facts, and this device's own.
+# HakiOS defconfig for the Xiaomi 12S Pro (unicorn): the common kernel, the sm8450 family's facts, and this device's own.
 #include common_defconfig
 #include sm8450.config
-#include mayfly.config
+#include unicorn.config

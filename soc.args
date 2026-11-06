@@ -1,3 +1,18 @@
+# devices/unicorn/soc.args: what the kernel needs to know about the SM8475 in this phone.
+#
+# Same SoC family as the Xiaomi 12S (mayfly), so the values are the family's; each one was checked
+# against the Xiaomi 12S Pro's own device tree (cape.dtsi / waipio.dtsi of the sm8450 devicetree
+# release, quoted in docs/FINDINGS.md) where the tree names the block. Anything that is this phone's
+# own and not the SoC's does not belong here.
+#
+#   soc_ipcc        0xed18000  ipcc@ed18000            (cape.dtsi: qcom,ipcc@ed18000)
+#   soc_imem        0x14600000 msm-imem@146aa000       (the cookie block is at 0x146aa000)
+#   soc_smem        0x80900000 smem_region@80900000
+#   soc_cmd_db      0x80860000 aop_cmd_db_region@80860000
+#   soc_mpss_mem    0x8bc00000 mpss_region@8bc00000    (0x13200000 long)
+#   soc_rsc         0x17a20000 apps_rsc@17a00000       (the RSC's control block inside it)
+#   soc_aoss        0xc300000  the always-on subsystem's register block
+#   soc_apps_smmu   0x15000000 the apps SMMU (the UEFI memory map has the same range)
 soc_ipa_base=0x3e40000
 soc_gsi_base=0x3e04000
 soc_ipcc=0xed18000

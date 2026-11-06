@@ -1,7 +1,7 @@
 #!/bin/zsh
 # usage: runnoboot.sh NAME  (the image already booted by hand: waits for xnuloader, 120 s run, collects log into $T/NAME)
-N=$1; [[ -n "$N" && "$N" != */* && "$N" != .* ]] || { echo "usage: $0 NAME (a plain name: the log dir $T/NAME is wiped first)"; exit 2; }; T=${LOGDIR:-$HOME/hakios-mayfly-logs}; mkdir -p $T; D=$T/$N; rm -rf $D; mkdir -p $D
-cd "$(cd "$(dirname "$0")" && pwd)/../../.."   # the top of hakios-xnu-kernel (this repo sits in devices/mayfly)
+N=$1; [[ -n "$N" && "$N" != */* && "$N" != .* ]] || { echo "usage: $0 NAME (a plain name: the log dir $T/NAME is wiped first)"; exit 2; }; T=${LOGDIR:-$HOME/hakios-unicorn-logs}; mkdir -p $T; D=$T/$N; rm -rf $D; mkdir -p $D
+cd "$(cd "$(dirname "$0")" && pwd)/../../.."   # the top of hakios-xnu-kernel (this repo sits in devices/unicorn)
 
 
 for i in {1..60}; do timeout 5 fastboot devices | grep -q xnuloader && break; sleep 1; done

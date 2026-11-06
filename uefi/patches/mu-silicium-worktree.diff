@@ -322,7 +322,7 @@ index d2844e0a..33f0aba7 100644
 -  // Flush Frame Buffer
 -  WriteBackInvalidateDataCacheRange ((VOID *)FbBase, FbLength);
 +  // HakiOS: no flush of the whole 43 MB region for every message. The mapping is write-through, so nothing needs it,
-+  // and on mayfly the display engine stopped scanning out under that load.
++  // and on unicorn the display engine stopped scanning out under that load.
 +
 +  // HakiOS bring-up: count the writes where the boot shim's heartbeat CPU can read them
 +  (*(volatile UINT32 *)0xA7001000)++;

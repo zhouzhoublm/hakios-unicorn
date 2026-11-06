@@ -1,8 +1,11 @@
-# devices/mayfly/drivers/wifi/conf: the Xiaomi 12S's Wi-Fi.
+# devices/unicorn/drivers/wifi/conf: the Xiaomi 12S Pro's Wi-Fi.
 # CONFIG_HAKIOS_<NAME>=y in a defconfig builds a driver into the kernel (docs/drivers-config.md).
 
 driver QCA6490
 	file    bsd/dev/hakios.qca6490.c
 	requires QMI WIFI_STACK
 	help    the talk with the QCA6490's firmware (wifi_pcie=11): its memory, what it is, the board's files, m3, the modes.
+	help    The chip is this phone's too (cape.dtsi, qcom,cnss-qca6490@b0000000), but the board file the 12S port
+	help    loads is bd_l3s.elf -- "l3s" is the 12S's panel family; unicorn's is "l2s", so this phone's own
+	help    qca6490 directory in NON-HLOS.bin has to be read for its board file's name (docs/FIRMWARE.md).
 	help    The PCIe and MHI half is in hakios.adreno7.c for now. Needs fw-wifi/ from the phone

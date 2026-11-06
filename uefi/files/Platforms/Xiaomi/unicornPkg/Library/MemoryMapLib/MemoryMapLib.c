@@ -1,4 +1,11 @@
-// mayfly: the memory map of Silicium's b4q (SM8475, the same SoC), which matches the phone's own uefiplat.cfg
+// unicorn: the SM8475 (cape) platform's memory map -- Silicium's b4q, the reference device of this SoC, as
+// the Xiaomi 12S port uses it. Every entry the Xiaomi 12S Pro's own device tree names was checked against
+// that tree (cape-reserved-memory.dtsi, xiaomi-sm8475-common.dtsi: hyp 0x80000000/0x600000, xbl_dtlog
+// 0x80600000/0x40000, aop 0x80800000..0x808a0000, smem 0x80900000/0x200000, cpucp 0x80b00000/0x100000,
+// the modem's carve-outs from 0x85200000, imem 0x146aa000, the QTEE/TZ block from 0xe0000000) and agrees;
+// the ones the tree does not name are the platform's display, UEFI and DXE-heap regions, which is where a
+// UEFI image has to live on this family. Nothing here is a number guessed for this phone: when the phone
+// boots, its log's [memmap] dump (xnuloader's) is what this file gets corrected against.
 #include <Library/MemoryMapLib.h>
 
 STATIC
@@ -43,8 +50,10 @@ gMemoryDescriptor[] = {
   {"Stock DXE Heap",     0xF8000000, 0x07C00000, HobOnlyNoCacheSetting, SYS_MEM, SYS_MEM_CAP, Reserv, WRITE_BACK_XN},
   {"HYP Reserved",       0x830000000,0x10000000, HobOnlyNoCacheSetting, SYS_MEM, SYS_MEM_CAP, Reserv, WRITE_BACK_XN},
 
-  // HakiOS: where the boot shim leaves the "XNUP" payload (mkxnuimg.py, PAYLOAD_BASE): inside "Kernel", far above
-  // the boot image ABL unpacks at its start, and reserved, so UEFI leaves it alone.
+  // HakiOS: where the boot shim leaves the "XNUP" payload (XNU_PAYLOAD_BASE, 0xB0000000 on this device -- the
+  // DSC's BuildOptions and mkpayload.py agree): inside "Kernel" (0xA8000000 + 0x10000000), far above the boot
+  // image ABL unpacks at its start, and reserved, so UEFI leaves it alone. 0xF0000000, HakiOS's default, is
+  // inside this family's TZ apps region below ("TZApps Reserved" 0xEA000000 + 0x07400000) and resets the phone.
 
   // Other Memory Regions
   {"IMEM Base",          0x14680000, 0x0002A000, NoHob,  MMAP_IO, INITIALIZED, Conv,   NS_DEVICE},

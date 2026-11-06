@@ -1,7 +1,11 @@
-# devices/mayfly/drivers/input/conf: the Xiaomi 12S's own input drivers.
+# devices/unicorn/drivers/input/conf: the Xiaomi 12S Pro's own input drivers.
 # CONFIG_HAKIOS_<NAME>=y in a defconfig builds a driver into the kernel (docs/drivers-config.md).
 
 driver STFTS
 	file    bsd/dev/hakios.stfts.c
-	help    the touch screen of the Xiaomi 12S: an ST FingerTip (FTM5) on SPI, serial engine 4 (touchscreen=1).
-	help    The bus, pins and supplies are mayfly's
+	help    the touch screen of the Xiaomi 12S Pro: an ST FingerTip (FTM5) on SPI, serial engine 4 (touchscreen=1).
+	help    The chip, the bus, the pins (irq gpio21, reset gpio20) and the 16-bit super-resolution protocol are this
+	help    phone's own (unicorn-sm8475.dtsi, &qupv3_se4_spi). What is NOT: the file is the 12S port's, whose
+	help    coordinate ranges are 10800x24000; unicorn's are 14400x32000 (fts,x-max <14400>, fts,y-max <32000>),
+	help    so the scaling and the deadzone/edgezone/cornerzone tables have to be redone from unicorn's tree
+	help    before the driver is switched on

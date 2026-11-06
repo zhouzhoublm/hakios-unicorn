@@ -1,5 +1,5 @@
 /*
- * The GPU of the Xiaomi 12S (mayfly), an Adreno 730 ("gen7", chip ID 0x07030002), woken step by step the way
+ * The GPU of the Xiaomi 12S Pro (unicorn), an Adreno 730 ("gen7", chip ID 0x07030002), woken step by step the way
  * drivers/gpu/hakios.adreno.c wakes redwood's Adreno 642L. Every address below belongs to this phone, and nothing
  * is touched unless boot-arg adreno7=N asks for it.
  *
@@ -2832,7 +2832,7 @@ wifi_pin_in(uint32_t gpio)
 	return rd(ml_io_map(0x0f100000 + 0x1000 * (vm_offset_t)gpio, 0x1000) + 4) & 1;
 }
 
-extern bool hakios_mayfly_vreg_on(const char *name, uint32_t millivolts, bool high_power);
+extern bool hakios_unicorn_vreg_on(const char *name, uint32_t millivolts, bool high_power);
 
 /*
  * Step 4: the QCA6490 itself. Its supplies in the order and at the voltages of Android's cnss2 (dt: qcom,vdd-wlan-*-config,
@@ -3207,7 +3207,7 @@ wifi_qrtr_close(struct hakios_qrtr_port *port)
 static const struct hakios_qrtr_ops wifi_qrtr_ops = { wifi_qrtr_open, wifi_qrtr_data, wifi_qrtr_lookup, wifi_qrtr_close };
 
 bool
-hakios_mayfly_wifi_memory(uint64_t address, vm_offset_t memory, uint64_t size)
+hakios_unicorn_wifi_memory(uint64_t address, vm_offset_t memory, uint64_t size)
 {
 	return wifi_show(address, memory, size);
 }
@@ -3216,14 +3216,14 @@ hakios_mayfly_wifi_memory(uint64_t address, vm_offset_t memory, uint64_t size)
 static bool wifi_map_physical(uint64_t address, uint64_t physical, uint64_t size, uint64_t pte);
 
 bool
-hakios_mayfly_wifi_map_physical(uint64_t address, uint64_t physical, uint64_t size)
+hakios_unicorn_wifi_map_physical(uint64_t address, uint64_t physical, uint64_t size)
 {
 	return wifi_map_physical(address, physical, size, WIFI_PTE);
 }
 
 /* A device's registers behind a chip's address: the GIC's, for the radio's MSI (as the redwood's RADIO_PTE_DEVICE) */
 bool
-hakios_mayfly_wifi_map_device(uint64_t address, uint64_t physical, uint64_t size)
+hakios_unicorn_wifi_map_device(uint64_t address, uint64_t physical, uint64_t size)
 {
 	return wifi_map_physical(address, physical, size, 3ULL | 2ULL << 2 | 1ULL << 6 | 1ULL << 10 | 1ULL << 11 | 1ULL << 53 | 1ULL << 54);
 }
@@ -3256,7 +3256,7 @@ wifi_map_physical(uint64_t address, uint64_t physical, uint64_t size, uint64_t p
 static volatile bool wifi_link_up;
 
 bool
-hakios_mayfly_wifi_up(void)
+hakios_unicorn_wifi_up(void)
 {
 	return wifi_link_up;
 }
@@ -3264,7 +3264,7 @@ hakios_mayfly_wifi_up(void)
 static void
 wifi_talk(__unused void *parameter, __unused wait_result_t result)
 {
-	extern void hakios_mayfly_wlfw(void);
+	extern void hakios_unicorn_wlfw(void);
 	extern int hakios_lx_start(void);
 	uint32_t lx = 0;
 
@@ -3276,7 +3276,7 @@ wifi_talk(__unused void *parameter, __unused wait_result_t result)
 		error = hakios_lx_start();
 		printf("wifi: lx: ath11k's start returned %d\n", error);
 	} else {
-		hakios_mayfly_wlfw();
+		hakios_unicorn_wlfw();
 	}
 	thread_terminate(current_thread());
 }
@@ -3638,7 +3638,7 @@ wifi_chip_and_link(vm_offset_t gcc, vm_offset_t parf, vm_offset_t dbi)
 
 	(void)gcc;
 	for (unsigned i = 0; i < sizeof(rails) / sizeof(rails[0]); i++) {
-		bool done = hakios_mayfly_vreg_on(rails[i].name, rails[i].millivolts, false);
+		bool done = hakios_unicorn_vreg_on(rails[i].name, rails[i].millivolts, false);
 
 		printf("wifi: chip: supply %s (%s) at %u mV: %s\n", rails[i].what, rails[i].name, rails[i].millivolts, done ? "asked for" : "FAILED");
 		if (!done) {
@@ -3789,7 +3789,7 @@ wifi_pcie_probe(__unused void *parameter, __unused wait_result_t result)
 		static const struct { const char *name; uint32_t cbcr; } on[] = {
 			{ "cfg_ahb", 0x7b030 }, { "mstr_axi", 0x7b028 }, { "slv_axi", 0x7b020 }, { "slv_q2a", 0x7b01c }, { "aux", 0x7b034 },
 		};
-		bool one = hakios_mayfly_vreg_on("ldoc10", 1200, true), two = hakios_mayfly_vreg_on("ldob5", 880, true);
+		bool one = hakios_unicorn_vreg_on("ldoc10", 1200, true), two = hakios_unicorn_vreg_on("ldob5", 880, true);
 
 		printf("wifi: pcie0: supplies asked for: %d %d\n", one, two);
 		if (!one || !two) {
@@ -3887,7 +3887,7 @@ wifi_pcie_probe(__unused void *parameter, __unused wait_result_t result)
  * status and Wi-Fi's context there -- is looked at and told the moment it is not clear, so that it is in the log the
  * host fetches every few seconds before any reset. A fault seen is cleared (the status is write-one-to-clear).
  */
-void hakios_mayfly_cpu_ceiling(void);    /* (below: boot-arg cpu_mhz) */
+void hakios_unicorn_cpu_ceiling(void);    /* (below: boot-arg cpu_mhz) */
 static void thermal_step(uint32_t seconds);     /* (below: the temperature, once a second) */
 
 static void
@@ -3955,12 +3955,12 @@ gpu_keep(void)
 		}
 	}
 	{
-		extern bool hakios_mayfly_memory_fast(uint32_t vote);
+		extern bool hakios_unicorn_memory_fast(uint32_t vote);
 		uint32_t vote = 0x3fff;
 
 		PE_parse_boot_argn("ddr_vote", &vote, sizeof(vote));
 		if (vote != 0) {
-			printf("adreno: memory bandwidth vote %u: %d\n", vote, hakios_mayfly_memory_fast(vote));
+			printf("adreno: memory bandwidth vote %u: %d\n", vote, hakios_unicorn_memory_fast(vote));
 		}
 	}
 	gpu_free[0].start = GPU_ADDRESSES_START;
@@ -3970,7 +3970,7 @@ gpu_keep(void)
 	to_memory(core_scratch.memory, 4096);
 	PE_parse_boot_argn("gpu_log", &gpu_log, sizeof(gpu_log));
 	gpu_kept = true;
-	hakios_mayfly_cpu_ceiling();
+	hakios_unicorn_cpu_ceiling();
 	{
 		thread_t watcher;
 
@@ -4093,10 +4093,10 @@ hakios_adreno_init(void)
  */
 /*
  * Boot-arg cpu_mhz=N: every clock domain to the highest regular entry of its table at or under N MHz, in place of the
- * loader's top one (the Xiaomi 12S, 1 November: the phone reset under load, the limits hardware had just pulled the big
+ * loader's top one (the Xiaomi 12S Pro, 1 November: the phone reset under load, the limits hardware had just pulled the big
  * cores down from 2649 and 2995 MHz to 1881 and 2246 -- a supply or heat limit, which a lower ceiling keeps away from).
  */
-void hakios_mayfly_cpu_ceiling(void);
+void hakios_unicorn_cpu_ceiling(void);
 
 static vm_offset_t ceiling_epss;
 static uint32_t cpu_ceiling_asked;              /* MHz; 0: the top of each table */
@@ -4139,7 +4139,7 @@ cpu_ceiling_set(uint32_t ceiling, bool tell)
 }
 
 void
-hakios_mayfly_cpu_ceiling(void)
+hakios_unicorn_cpu_ceiling(void)
 {
 	uint32_t ceiling = 0;
 
@@ -4165,10 +4165,10 @@ hakios_mayfly_cpu_ceiling(void)
 #define THERMAL_COOL    750
 static const uint32_t thermal_steps[] = { 0, 2400, 2000, 1700, 1400, 1100 };
 
-int hakios_mayfly_hottest(int *sensor);
+int hakios_unicorn_hottest(int *sensor);
 
 int
-hakios_mayfly_hottest(int *sensor)
+hakios_unicorn_hottest(int *sensor)
 {
 	static vm_offset_t tm[2];
 	int hottest = -1000, where = -1;
@@ -4203,7 +4203,7 @@ static void
 thermal_step(uint32_t seconds)
 {
 	static uint32_t step, cool_for, hot_for, governor = 2, lowest_step;   /* (lowest_step: never above cpu_mhz's ceiling) */
-	int sensor, t = hakios_mayfly_hottest(&sensor);
+	int sensor, t = hakios_unicorn_hottest(&sensor);
 
 	if (governor == 2) {
 		governor = 1;
@@ -4239,22 +4239,22 @@ thermal_step(uint32_t seconds)
 }
 
 /* For the display driver's numbers on the screen (MiniIOMobileFramebuffer.cpp, fb_hud=1): the hottest sensor, the clocks. */
-void hakios_mayfly_hud_numbers(int *temperature, uint32_t mhz[3], uint32_t *ceiling);
-uint32_t hakios_mayfly_gpu_mhz(void);
+void hakios_unicorn_hud_numbers(int *temperature, uint32_t mhz[3], uint32_t *ceiling);
+uint32_t hakios_unicorn_gpu_mhz(void);
 
 uint32_t
-hakios_mayfly_gpu_mhz(void)
+hakios_unicorn_gpu_mhz(void)
 {
 	return gpu_kept ? gpu_mhz_asked : 0;
 }
 
 void
-hakios_mayfly_hud_numbers(int *temperature, uint32_t mhz[3], uint32_t *ceiling)
+hakios_unicorn_hud_numbers(int *temperature, uint32_t mhz[3], uint32_t *ceiling)
 {
 	if (ceiling_epss == 0) {
 		ceiling_epss = ml_io_map(0x17d91000, 0x3000);
 	}
-	*temperature = hakios_mayfly_hottest(NULL);
+	*temperature = hakios_unicorn_hottest(NULL);
 	for (int d = 0; d < 3; d++) {
 		mhz[d] = (rd(ceiling_epss + 0x1000 * d + 0x20) & 0xff) * 192 / 10;
 	}

@@ -7,7 +7,7 @@ index 9116ba9d96..4268698818 100644
    )
  {
 +  //
-+  // HakiOS (mayfly): after ABL the SPMI arbiter's channels that belong to other execution environments answer with a
++  // HakiOS (unicorn): after ABL the SPMI arbiter's channels that belong to other execution environments answer with a
 +  // synchronous external abort, where stock UEFI, which runs before ABL's lockdown, may read them. Make such an access
 +  // look like what a dead channel returns (all ones: "failed" in the status register) and let the driver carry on.
 +  //

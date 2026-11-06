@@ -1,4 +1,4 @@
-# devices/mayfly/drivers/bluetooth/conf: the Xiaomi 12S's Bluetooth.
+# devices/unicorn/drivers/bluetooth/conf: the Xiaomi 12S Pro's Bluetooth.
 # CONFIG_HAKIOS_<NAME>=y in a defconfig builds a driver into the kernel (docs/drivers-config.md).
 
 driver QCABT
@@ -6,3 +6,5 @@ driver QCABT
 	file    bsd/dev/hakios.qcabt_h4.c
 	file    bsd/dev/hakios.qcabt_shim.c
 	help    the Bluetooth half of the QCA6490 over its UART (qcabt=N): engine, loopback, chip version, firmware, HCI, BLE scan
+	help    The chip and the UART (QUP SE20) are this phone's; BT_EN is gpio81 in unicorn's tree, and the SW_CTRL
+	help    gpio the 12S port uses (82) is not named in it -- read it out of the phone's tree before relying on it

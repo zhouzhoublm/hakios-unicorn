@@ -1,39 +1,69 @@
-# Bring-up history
+# How this repository was made
 
-Two days, in order. Image names (`xnu-NAME.img`) match the log directories some of these came from.
+The 12S Pro port starts from the Xiaomi 12S port, because it is the same SoC and the same Qualcomm
+platform: [cotunjr/hakios-mayfly](https://github.com/cotunjr/hakios-mayfly). This is the order the work
+was done in, so that the next person can redo it or disagree with it.
 
-## 2026-10-31
+## 1. The template, taken as it is
 
-| Time | Milestone |
-|---|---|
-| morning | Device facts from Android with temporary root (`fastboot boot` of a Magisk-patched stock boot.img, nothing flashed): live DTB, dmesg, iomem, vendor firmware. Touch confirmed as ST FTS, Wi-Fi as QCA6490 PCIe. |
-| | UEFI blobs extracted with UEFIReader; mayflyPkg started from ingres (SM8450), then b4q (SM8475) memory map. |
-| 15:00 | ABL accepts header v4 with os_version 0; payload must sit at 0xB0000000; DEBUG UEFI logs on screen. |
-| 16:00 | "DXE hangs at random drivers" disproved with a CPU7 heartbeat that resets the phone at a chosen time: ClockDxe kills scan-out, PmicDxe aborts in SPMI, then an unexplained reset at ~29 s. |
-| 16:40 | **XNU boots to pid 1** with a blob-free UEFI. |
-| 17:05 | Native UFS read from the loader (SMMU stream takeover, START STOP UNIT). |
-| 17:40 | **Apple logo**: Darwin root on `userdata`, real IPSW identity, resident flashboot volume. |
-| 18:28 | **Touch works in iOS** (bit-banged SPI, 16-bit coordinates). |
-| 19:12 | **All 18 Adreno 730 steps pass**: zap authenticated, GPU writes memory on command. |
-| 19:48 | **USB in the loader**: own DWC3 driver; `fastboot oem run/log`, 1.4 MB log in 0.03 s. |
-| evening | Panel at 120 Hz; Wi-Fi powers up and trains PCIe; Mesa renders on the GPU. |
-| 21:43 | Wi-Fi reaches MHI mission mode. |
-| 23:05 | **Buttons work.** Wi-Fi firmware takes ini/cfg and goes to mission mode. |
+`hakios-mayfly` was copied whole into `devices/unicorn/` and every name changed (`mayfly` → `unicorn`,
+`mayflyPkg` → `unicornPkg`, `configs/mayfly*.config` → `configs/unicorn*.config`, the UEFI platform's
+`.dec/.dsc/.fdf`, `Resources/Configs/unicorn.toml`, `Resources/DTBs/unicorn.dtb`, the device's
+`XnuLoader.h.unicorn`). Nothing else was carried over from any other port: **no memory address, no
+framebuffer base, no payload base and no panel number comes from anywhere but this phone's own device
+tree or the platform it runs**, and each one is argued in docs/FINDINGS.md.
 
-## 2026-11-01
+What was thrown away rather than renamed, because it is another phone's data and would be a lie here:
 
-| Time | Milestone |
-|---|---|
-| 08:10 | Wi-Fi: 16 MB-aligned QMI memory → "memory ready"; ADSP firmware extracted from NON-HLOS.bin. |
-| morning | ADSP up; **battery level in iOS**; brightness sliders work. |
-| 09:10 | **Wi-Fi internet works** (134 MB received; join from Settings). |
-| 09:10 | AudioReach answers over GPR; PRM grants clocks. |
-| 11:00 | **Bluetooth HCI up**: rampatch, NVM, HCI reset, BLE scan hears advertisers. |
-| 11:50 | **Stock iOS bluetoothd** runs on the chip; a Mac sees the phone. |
-| 12:10 | **Bluetooth audio** to a speaker. |
-| 12:25 | Android comparison of the AW88261 registers while playing → the bus format is the difference. |
-| 12:42 | **Internal speakers play** a tone: TDM sink instead of I2S. |
-| 13:27 | **iOS sound through the speakers**, clean (no clipping with `sound_gain=0`). |
-| 13:37 | **Tearing fixed** with the double-buffered flip (`fb_flip=1`), 63 → 94 fps. |
-| 14:40 | Smoothness work: vmd denied, faster copies, HUD (`fb_hud=1`), 120 Hz for apps, thermal governor. Dynamic Island parked. |
-| 14:50 | Daily image `xnu-daily1.img`; open issues in [OPEN-ISSUES.md](OPEN-ISSUES.md). |
+- `reference/android/*` — the 12S's `dmesg`, `iomem`, `partitions`, live device tree and `getprop`
+  dumps. The collectors that produced them are kept (`tools/android/`), and `reference/README.md` says
+  what to pull from this phone.
+- `logs/*.log` — kernel and iOS logs from the 12S.
+- `uefi/files/Binaries/mayfly/README.md` — kept as `Binaries/unicorn/README.md`, which is the note
+  saying no vendor driver is in the repository.
+
+## 2. What was read out of this phone's own source
+
+The Xiaomi SM8450 devicetree release (the `unicorn-*` board files plus the cape/waipio platform trees
+they include) answered every question the 12S template could not:
+
+| Question | Answer for unicorn | Where |
+|---|---|---|
+| Does it have the same touch controller? | yes — ST FTS, SPI SE4, gpio20/21, but 14400x32000, not 10800x24000 | `unicorn-sm8475.dtsi`, `&qupv3_se4_spi` |
+| Same amplifiers? | **no** — 2x Cirrus CS35L41 on SE15 at 0x40/0x43 | `unicorn-sm8475.dtsi`, `&qupv3_se15_i2c` |
+| Same haptics? | **no** — Awinic AW8697 on I2C SE18, the PMIC's hv-haptics disabled | `unicorn-sm8475.dtsi` |
+| Panel? | WQHD+ 1440x3200, "l2s", DSC command mode, 1-120 Hz | `unicorn-sde-display-mtp.dtsi` |
+| Wi-Fi/BT chip? | QCA6490, as the cape platform defines it | `cape.dtsi`, `bt_qca6490` / `cnss-qca6490` |
+| UFS? | 0x1d84000, cape PHY v4 | `cape.dtsi`, `xiaomi-sm8475-common.dtsi` |
+| Memory carve-outs? | the cape platform's table, and the 4 MiB from 0xA7000000 Android uses for ramoops | `cape-reserved-memory.dtsi`, `xiaomi-sm8475-common.dtsi` |
+
+## 3. The UEFI platform
+
+`unicornPkg` is `mayflyPkg` with:
+
+- the framebuffer **1440x3200** (was 1080x2400),
+- SMBIOS **Xiaomi 12S Pro / unicorn / Xiaomi_12S_Pro_unicorn**,
+- the **memory map unchanged** — it is the SM8475 platform's, and this phone's own tree agrees with the
+  entries it names (FINDINGS.md has the table),
+- the FD at **0xA7100000 / 0x300000** — and here the phone's own tree is the evidence: Android's
+  ramoops on unicorn occupies 0xA7000000 + 4 MiB, the region the bootloader hands a UEFI image,
+- `-DXNU_PAYLOAD_BASE=0xB0000000ULL` unchanged: this family's TZ apps live at 0xEA000000, which is why
+  HakiOS's default 0xF0000000 cannot be used on any phone of this family.
+
+## 4. The device tree
+
+Built from source (see FINDINGS.md): the cape platform tree with unicorn's board overlay applied, and
+the two Android overlays (DSI panels, ASoC graph) left out because they do not apply to the reference
+base and HakiOS needs neither to start. The command is in FINDINGS.md; the phone's own
+`/sys/firmware/fdt` is the upgrade.
+
+## 5. The image
+
+`SILICIUM_UEFI.fd` for `unicornPkg`, the BootShim, the loader and (later) the kernel are packed into an
+Android boot image v4 exactly as the 12S port does it — the recipe and the numbers are in
+[docs/BUILD.md](BUILD.md).
+
+## 6. What is not done
+
+Everything that needs the phone: the first boot, the framebuffer's real base, the panel, the touch
+ranges, the amplifiers, haptics, Wi-Fi, Bluetooth. docs/OPEN-ISSUES.md orders them.

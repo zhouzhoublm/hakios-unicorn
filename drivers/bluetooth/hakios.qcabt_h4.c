@@ -1,5 +1,5 @@
 /*
- * Adapted for the Xiaomi 12S from iOSPlus10 (github.com/akshaynexus/iOSPlus10, patches/xnu/0332-0338), which is
+ * Adapted for the Xiaomi 12S Pro from iOSPlus10 (github.com/akshaynexus/iOSPlus10, patches/xnu/0332-0338), which is
  * Copyright (c) 2026 iOSPlus10 contributors, MIT License: see THIRD-PARTY-NOTICE in this directory.
  */
 /*

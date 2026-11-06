@@ -1,5 +1,5 @@
 /*
- * The talk with the Wi-Fi firmware's service ("WLFW") on the Xiaomi 12S's QCA6490, over QMI and QRTR on MHI (the transport
+ * The talk with the Wi-Fi firmware's service ("WLFW") on the Xiaomi 12S Pro's QCA6490, over QMI and QRTR on MHI (the transport
  * is in hakios.adreno7.c): in the order of ath11k's qmi.c for a chip of this family, and of what Android's cnss2 logs on
  * this phone. Which indications we want, what the host can do; the firmware asks for memory and is given it; what the
  * chip is; the regulatory database and the board's file in pieces; where m3 is; "ready", then the configuration and the
@@ -19,17 +19,17 @@
 #include <vm/vm_kern.h>
 #include <mach/vm_param.h>
 
-extern bool hakios_mayfly_wifi_memory(uint64_t address, vm_offset_t memory, uint64_t size);
+extern bool hakios_unicorn_wifi_memory(uint64_t address, vm_offset_t memory, uint64_t size);
 extern const uint8_t *hakios_image_file(const char *dir, const char *name, uint64_t *size, int *disk);
 extern void IOSleep(unsigned int milliseconds);
 extern vm_offset_t kvtophys(vm_offset_t va);
 
-void hakios_mayfly_wlfw(void);
+void hakios_unicorn_wlfw(void);
 
 #if !__has_include("hakios.wlfw_ath11k.h")
 
 void
-hakios_mayfly_wlfw(void)
+hakios_unicorn_wlfw(void)
 {
 	printf("wifi: wlfw: FAILED: ath11k's message descriptions were not there when this kernel was built (tools/mk-wlfw.sh)\n");
 }
@@ -230,7 +230,7 @@ give_memory(void)
 			__asm__ volatile ("dc civac, %0" : : "r" (line));
 		}
 		__asm__ volatile ("dsb sy");
-		if (!hakios_mayfly_wifi_memory(memory[i].address, piece, memory[i].size)) {
+		if (!hakios_unicorn_wifi_memory(memory[i].address, piece, memory[i].size)) {
 			printf("wifi: wlfw: FAILED: no page tables for %#x bytes\n", memory[i].size);
 			return false;
 		}
@@ -302,7 +302,7 @@ mission(void)
 }
 
 void
-hakios_mayfly_wlfw(void)
+hakios_unicorn_wlfw(void)
 {
 	static struct qmi_wlanfw_cap_resp_msg_v01 target;
 	struct qmi_wlanfw_ind_register_req_msg_v01 indications;
@@ -399,7 +399,7 @@ hakios_mayfly_wlfw(void)
 		__asm__ volatile ("dc civac, %0" : : "r" (line));
 	}
 	__asm__ volatile ("dsb sy");
-	if (!hakios_mayfly_wifi_memory(WLFW_MEMORY_AT - 0x100000, m3_memory, m3_size)) {
+	if (!hakios_unicorn_wifi_memory(WLFW_MEMORY_AT - 0x100000, m3_memory, m3_size)) {
 		printf("wifi: wlfw: FAILED: no page tables for m3\n");
 		return;
 	}
@@ -441,8 +441,8 @@ hakios_mayfly_wlfw(void)
 #include <stdarg.h>
 #include <sys/hakios.input.h>
 
-extern bool hakios_mayfly_wifi_map_physical(uint64_t address, uint64_t physical, uint64_t size);
-extern bool hakios_mayfly_wifi_up(void);
+extern bool hakios_unicorn_wifi_map_physical(uint64_t address, uint64_t physical, uint64_t size);
+extern bool hakios_unicorn_wifi_up(void);
 extern void loader_log_putc(char c);
 
 #define RADIO_POOL_FIRST        0xa4000000ULL   /* ath11k's memory, behind the chip's addresses: after MHI's and m3's */
@@ -518,7 +518,7 @@ hakios_wifi_driver_file(const char *name, uint64_t *size)
 bool
 hakios_wifi_dsp_is_up(void)
 {
-	bool up = hakios_mayfly_wifi_up();
+	bool up = hakios_unicorn_wifi_up();
 
 	printf("wifi: lx: the driver asks whether the chip is up: %s\n", up ? "MHI in mission mode, QRTR's channels open" : "IT IS NOT");
 	return up;
@@ -530,7 +530,7 @@ hakios_wifi_radio_map(uint64_t physical, uint64_t size, unsigned long long *addr
 	uint64_t at = radio_next;
 
 	size = (size + 4095) & ~4095ULL;
-	if (at + size > RADIO_POOL_END || !hakios_mayfly_wifi_map_physical(at, physical, size)) {
+	if (at + size > RADIO_POOL_END || !hakios_unicorn_wifi_map_physical(at, physical, size)) {
 		printf("wifi: lx: FAILED: %llu bytes cannot be shown to the chip (%#llx used of the pool)\n", size, radio_next - RADIO_POOL_FIRST);
 		return false;
 	}
@@ -547,7 +547,7 @@ hakios_wifi_radio_map_memory(vm_offset_t memory, uint64_t size, unsigned long lo
 	uint64_t at = radio_next;
 
 	size = (size + 4095) & ~4095ULL;
-	if (at + size > RADIO_POOL_END || !hakios_mayfly_wifi_memory(at, memory, size)) {
+	if (at + size > RADIO_POOL_END || !hakios_unicorn_wifi_memory(at, memory, size)) {
 		printf("wifi: lx: FAILED: %llu bytes of memory cannot be shown to the chip\n", size);
 		return false;
 	}
@@ -568,13 +568,13 @@ hakios_wifi_radio_map_memory(vm_offset_t memory, uint64_t size, unsigned long lo
 bool
 hakios_wifi_radio_msi(unsigned long long *address, uint32_t *data, uint32_t *first_spi)
 {
-	extern bool hakios_mayfly_wifi_map_device(uint64_t address, uint64_t physical, uint64_t size);
+	extern bool hakios_unicorn_wifi_map_device(uint64_t address, uint64_t physical, uint64_t size);
 	static uint64_t page;
 
 	if (page == 0) {
 		uint64_t at = (radio_next + 0xffff) & ~0xffffULL;
 
-		if (at + 0x10000 > RADIO_POOL_END || !hakios_mayfly_wifi_map_device(at, RADIO_MSI_REGISTER & ~4095ULL, 4096)) {
+		if (at + 0x10000 > RADIO_POOL_END || !hakios_unicorn_wifi_map_device(at, RADIO_MSI_REGISTER & ~4095ULL, 4096)) {
 			hakios_wifi_tell("wifi: lx: FAILED: the GIC's SETSPI cannot be shown to the chip\n");
 			return false;
 		}
