@@ -103,6 +103,29 @@ mirrors these steps: `uefi/hakios.patch`, `uefi/files/`, the device's platform, 
 override, the stubs, `stuart_update`, `stuart_build`, BootShim + payload + gzip + `mkbootimg.py`
 header v4. Use it when the machine you have cannot reach GitHub's submodules reliably.
 
+## What was built and checked (2026-11-06)
+
+The CI above was run for this device (`workflow_dispatch`, `device=unicorn`,
+`device_repo=https://github.com/zhouzhoublm/hakios-unicorn`, `payload_mode=selftest`, `target=DEBUG`)
+and finished green. Its artifact `uefi-fd-unicorn` was unpacked and checked:
+
+| Thing | Value |
+|---|---|
+| `SILICIUM_UEFI.fd` | 3 145 728 bytes (0x300000, exactly `FD_SIZE`), base 0xA7100000, `FVMAIN_COMPACT` 19 % used, built in 62 s |
+| modules in the FD | DxeCore, ArmCpuDxe, ArmGicDxe, ArmTimerDxe, **SimpleFbDxe**, GraphicsConsoleDxe, BdsDxe, Smbios/ACPI/IortDtDxe, the three BMPs... and **no vendor DXE driver** (blob-free), with `loader.efi` (the XNU loader hook) present in the decompressed tree |
+| BootShim | 192 bytes, built with `-DFD_BASE=0xA7100000 -DFD_SIZE=0x300000 -DPAYLOAD_BASE=0xB0000000` |
+| payload (selftest) | 66 328 bytes, `XNUP` with `loader.efi` and `--checkpoint 999` |
+| device tree | 346 590 bytes, identical to `devices/unicorn/uefi/files/Resources/DTBs/unicorn.dtb` in this repository |
+| `xnu-unicorn.img` | 970 752 bytes, `ANDROID!` header **v4**, header_size 1584 (padded to 4096 by the v4 signature), kernel field 959 145 = 612 555 bytes of gzip(shim+FD+payload) + the DTB |
+
+```
+fd    sha256 45054ab4bb7a270f3ffdcee23e316a0020052cdc06e8d330c9866389743797e1
+img   sha256 848d2089e796740954f895d0ce1eabe56b6a8bc07c2a012e622658d871832520
+dtb   sha256 9a2e12e7bd92c98724a09c25584bdf41368efa5537e0457eadd1b4b6457e98f9
+```
+
+What it does **not** prove: that the phone starts it. That is the next thing (docs/OPEN-ISSUES.md, 1).
+
 ## The device tree
 
 `uefi/files/Resources/DTBs/unicorn.dtb` is built from source; the exact commands (`cpp` + `dtc` + two
