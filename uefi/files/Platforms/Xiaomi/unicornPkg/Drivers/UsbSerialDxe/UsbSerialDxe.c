@@ -442,6 +442,22 @@ UsbSerialTimer (
 }
 
 /**
+  Says something on the screen as well as in the debug stream: until the USB port exists the screen is the
+  only output this firmware has, so every stage has to be visible there too.
+**/
+STATIC
+VOID
+UsbSerialSay (
+  IN CONST CHAR16  *Message
+  )
+{
+  if (gST != NULL && gST->ConOut != NULL) {
+    gST->ConOut->OutputString (gST->ConOut, (CHAR16 *)Message);
+    gST->ConOut->OutputString (gST->ConOut, L"\r\n");
+  }
+}
+
+/**
   Driver entry point: bring the controller up through EFI_USBFN_IO_PROTOCOL, present a CDC ACM device and
   keep it serviced from a periodic timer.
 **/
@@ -458,8 +474,10 @@ InitUsbSerial (
   Status = gBS->LocateProtocol (&gEfiUsbFunctionIoProtocolGuid, NULL, (VOID **)&mUsbfn);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "usbserial: no EFI_USBFN_IO_PROTOCOL (%r), screen only\n", Status));
+    UsbSerialSay (L"usbserial: no UsbFnIo protocol");
     return Status;
   }
+  UsbSerialSay (L"usbserial: UsbFnIo found");
 
   /* the descriptor tables the function driver binds endpoints from */
   mEpsIf0[0]      = (EFI_USB_ENDPOINT_DESCRIPTOR *)(mConfigDesc + CFG_OFF_EP_NOTIFY);
@@ -484,16 +502,20 @@ InitUsbSerial (
   Status = mUsbfn->StartController (mUsbfn);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "usbserial: StartController failed (%r)\n", Status));
+    UsbSerialSay (L"usbserial: StartController FAILED -- the stage is on the screen above");
     return Status;
   }
   DEBUG ((DEBUG_INFO, "usbserial: controller started\n"));
+  UsbSerialSay (L"usbserial: controller started");
 
   Status = mUsbfn->ConfigureEnableEndpoints (mUsbfn, &mDeviceInfo);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "usbserial: ConfigureEnableEndpoints failed (%r)\n", Status));
+    UsbSerialSay (L"usbserial: ConfigureEnableEndpoints FAILED");
     return Status;
   }
   DEBUG ((DEBUG_INFO, "usbserial: endpoints bound, CDC ACM waiting for a host\n"));
+  UsbSerialSay (L"usbserial: endpoints bound -- waiting for a host");
 
   if (EFI_ERROR (mUsbfn->AllocateTransferBuffer (mUsbfn, USBSER_CHUNK, &mRxBuffer)) ||
       EFI_ERROR (mUsbfn->AllocateTransferBuffer (mUsbfn, USBSER_CHUNK, &mTxBuffer))) {

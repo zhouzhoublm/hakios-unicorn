@@ -152,37 +152,33 @@ UsbfnPlatformPhyInit (
   UINT32  Value;
 
   //
-  // 1. USB30 power domain. Read it first: ABL needed it for fastboot, so it is usually already on, and
-  //    clearing the collapse request again costs nothing but time.
+  // 1. USB30 power domain. Read it first: ABL needed it for fastboot, so it is usually already on.
+  //    Nothing here is fatal on a status bit we have not measured on this phone yet: the register values
+  //    are printed instead, so one look at the screen tells us what this GCC actually reports.
   //
   Value = MmioRead32 (GCC_BASE + GCC_USB30_GDSC_CTRL);
+  DEBUG ((DEBUG_INFO, "usbfn: gdsc before %08x\n", Value));
   if ((Value & GCC_USB30_GDSC_PWR_ON) == 0) {
     MmioWrite32 (GCC_BASE + GCC_USB30_GDSC_CTRL, Value & ~GCC_USB30_GDSC_COLLAPSE);
-    if (!WaitForBits (GCC_BASE + GCC_USB30_GDSC_CTRL, GCC_USB30_GDSC_PWR_ON, GCC_USB30_GDSC_PWR_ON, 100000)) {
-      DEBUG ((DEBUG_ERROR, "usbfn: USB30 GDSC did not power on (%08x)\n", MmioRead32 (GCC_BASE + GCC_USB30_GDSC_CTRL)));
-      return EFI_DEVICE_ERROR;
-    }
+    WaitForBits (GCC_BASE + GCC_USB30_GDSC_CTRL, GCC_USB30_GDSC_PWR_ON, GCC_USB30_GDSC_PWR_ON, 100000);
+    DEBUG ((DEBUG_INFO, "usbfn: gdsc after %08x\n", MmioRead32 (GCC_BASE + GCC_USB30_GDSC_CTRL)));
   }
-  DEBUG ((DEBUG_INFO, "usbfn: gdsc ok\n"));
 
   //
-  // 2. The USB clocks. A branch that the hardware gates while idle reports CLK_OFF set together with
-  //    HALT_VOTED; only a branch that is genuinely off reports CLK_OFF without it.
+  // 2. The USB clocks: enable what is not enabled and print what each branch reports. A branch the
+  //    hardware gates while idle reports CLK_OFF together with HALT_VOTED, so the bits alone are not a
+  //    reason to fail.
   //
   for (Index = 0; Index < ARRAY_SIZE (mUsbClockRegs); Index++) {
-    UINT32  Reg  = GCC_BASE + mUsbClockRegs[Index];
-    UINT32  Now  = MmioRead32 (Reg);
+    UINT32  Reg = GCC_BASE + mUsbClockRegs[Index];
+    UINT32  Now = MmioRead32 (Reg);
 
     if ((Now & GCC_CLK_ENABLE) == 0) {
       MmioWrite32 (Reg, Now | GCC_CLK_ENABLE);
+      MicroSecondDelay (100);
     }
-    if (!WaitForBits (Reg, GCC_CLK_OFF | GCC_CLK_HALT_VOTED, 0, 100000) &&
-        !WaitForBits (Reg, GCC_CLK_HALT_VOTED, GCC_CLK_HALT_VOTED, 100000)) {
-      DEBUG ((DEBUG_ERROR, "usbfn: clock %08x did not run (%08x)\n", mUsbClockRegs[Index], MmioRead32 (Reg)));
-      return EFI_DEVICE_ERROR;
-    }
+    DEBUG ((DEBUG_INFO, "usbfn: clk %08x %08x\n", mUsbClockRegs[Index], MmioRead32 (Reg)));
   }
-  DEBUG ((DEBUG_INFO, "usbfn: clocks ok\n"));
 
   //
   // 3. The QUP SE5 wrapper the repeater sits on shares its votes with the engines behind it, so this
@@ -190,20 +186,18 @@ UsbfnPlatformPhyInit (
   //
   Value = MmioRead32 (GCC_BASE + GCC_QUP_WRAP_SE5_VOTE);
   MmioWrite32 (GCC_BASE + GCC_QUP_WRAP_SE5_VOTE, Value | (BIT6 | BIT7 | BIT15));
+  DEBUG ((DEBUG_INFO, "usbfn: qup vote %08x -> %08x\n", Value, MmioRead32 (GCC_BASE + GCC_QUP_WRAP_SE5_VOTE)));
 
   //
-  // 4. The eUSB2 PHY: its resets must be released before anything reads it.
+  // 4. The eUSB2 PHY: report its resets rather than refusing on them. ABL ran its own fastboot over this
+  //    PHY, so if a reset bit reads as asserted here the meaning of that bit is what needs checking, not
+  //    the PHY.
   //
-  if ((MmioRead32 (GCC_BASE + GCC_PHY_AHB2PHY_CFG) & BIT0) != 0 ||
-      (MmioRead32 (GCC_BASE + GCC_PHY_AHB2PHY_CFG2) & BIT0) != 0) {
-    DEBUG ((DEBUG_ERROR, "usbfn: eUSB2 PHY reset still asserted (%08x / %08x)\n",
-            MmioRead32 (GCC_BASE + GCC_PHY_AHB2PHY_CFG), MmioRead32 (GCC_BASE + GCC_PHY_AHB2PHY_CFG2)));
-    return EFI_DEVICE_ERROR;
-  }
+  DEBUG ((DEBUG_INFO, "usbfn: phy reset bits %08x %08x\n",
+          MmioRead32 (GCC_BASE + GCC_PHY_AHB2PHY_CFG), MmioRead32 (GCC_BASE + GCC_PHY_AHB2PHY_CFG2)));
 
   //
-  // 5. A power-on read of the PHY: if the block does not answer its own revision register, everything
-  //    after this point would be a write to a dead bus. Reading is safe, writing is not.
+  // 5. Power-on reads: if these answer, the block is alive under this build's page tables.
   //
   DEBUG ((DEBUG_INFO, "usbfn: eusb2 phy %08x rev %08x\n",
           USB_EUSB2_PHY_BASE, MmioRead32 (USB_EUSB2_PHY_BASE + 0x00)));
