@@ -1,12 +1,27 @@
 # Open issues
 
-Ordered the way they have to be worked. Nothing has been run on this phone yet (2026-11-06); item 1 is
-the whole of the current state.
+Ordered the way they have to be worked. **The first two boots have now happened (2026-11-06, on the
+phone): the image is accepted and started, and nothing our code does reaches USB.** Item 1 is that
+result; docs/LOG-CHANNELS.md is the log-channel analysis it produced.
 
-## 1. The first boot has not happened
+## 1. The first boots: accepted, then unobservable
 
 `SILICIUM_UEFI.fd` for `unicornPkg` is built, and packs into a boot image v4 with the BootShim, the
-loader and this phone's device tree (docs/BUILD.md). It has not been started.
+loader and this phone's device tree (docs/BUILD.md). Two attempts were made on 2026-11-06 with
+`tools/pc/boot-attempt.ps1`:
+
+- `fastboot boot xnu-unicorn-selftest.img` → **`Sending OKAY / Booting OKAY / Finished` in 0.428 s**:
+  ABL accepts the image (bootloader unlocked, `verifiedbootstate=orange`).
+- For the next ~60 s **no USB device appears at all** — not `xnuloader`, not an unknown device, not a
+  descriptor failure — and the phone then comes back to Android by itself. The port is blind from
+  BootShim's first instruction until the loader's USB enumerates.
+- This ABL has no OEM commands at all (`fastboot oem help` / `oem log` → `unknown command`): every
+  `oem run` / `oem log` / `get_staged` / `oem stop` in `tools/run.sh` is the *loader's* interface and
+  only exists once the loader is up.
+
+The next question is *which stage* dies (BootShim, DXE, payload handoff, or loader USB). Until the
+loader's USB works, only two channels can answer it: the screen, and a RAM read-back
+(docs/LOG-CHANNELS.md §2, §5). The plan below assumes the outcomes in the table.
 
 The run to do, and what each outcome means:
 

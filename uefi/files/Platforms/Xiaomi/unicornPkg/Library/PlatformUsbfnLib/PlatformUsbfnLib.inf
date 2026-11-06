@@ -1,0 +1,27 @@
+## @file
+#  unicorn's PlatformUsbfnLib: the four functions the generic DWC3 driver asks its SoC for.
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = PlatformUsbfnLib
+  FILE_GUID                      = 6E1B3B57-6C4B-4E52-9E33-0C2A5B4A7E11
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = PlatformUsbfnLib
+
+[Sources]
+  PlatformUsbfnLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  SiliciumPkg/SiliciumPkg.dec
+  unicornPkg/unicornPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  IoLib
+  TimerLib

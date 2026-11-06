@@ -1,0 +1,17 @@
+## @file
+#  unicornPkg: the Xiaomi 12S Pro (unicorn, SM8475) platform package for Mu-Silicium.
+#
+#  Until the USB function work this file was empty, because nothing in the platform published headers.
+#  It now publishes Include/, which is where Device/Dwc3.h (the DWC3 register map, from the same source
+#  tree as the driver) and Library/PlatformUsbfnLib.h (the four board functions) live.
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+[Defines]
+  DEC_SPECIFICATION              = 0x00010005
+  PACKAGE_NAME                   = unicornPkg
+  PACKAGE_GUID                   = 1C9C1B2E-0E52-4C61-9F0A-8B2E5D7C3A41
+  PACKAGE_VERSION                = 0.1
+
+[Includes]
+  Include

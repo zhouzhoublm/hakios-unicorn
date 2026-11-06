@@ -1,0 +1,49 @@
+## @file
+#  DWC3 USB function (device mode) driver, producing EFI_USBFN_IO_PROTOCOL.
+#
+#  Taken for unicorn from Chengdong-Yu/uefi-pong (Silicon/Samsung/SamsungPkg/Drivers/UsbfnDwc3Dxe),
+#  whose Source.txt traces it to the LineageOS universal9830 kernel's drivers/usb/dwc3/. The only
+#  changes here: the package list points at unicornPkg, and the ChipInfo protocol (used for the USB
+#  serial-number string only) is gone because this firmware has no ChipInfo provider -- see
+#  Dwc3BuildSerialNumber() and this directory's README.md.
+#
+#  SPDX-License-Identifier: GPL-2.0-only
+##
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = UsbfnDwc3Dxe
+  FILE_GUID                      = 0BF8B0C9-30E6-4E2A-9E1D-5F6C1A47D3B2
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = InitUsbfnDwc3Driver
+
+[Sources]
+  UsbfnDwc3Dxe.c
+  Dwc3Core.c
+  Dwc3Endpoint.c
+
+[Packages]
+  ArmPkg/ArmPkg.dec
+  MdePkg/MdePkg.dec
+  SiliciumPkg/SiliciumPkg.dec
+  unicornPkg/unicornPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  CacheMaintenanceLib
+  DebugLib
+  DxeServicesTableLib
+  IoLib
+  MemoryAllocationLib
+  PlatformUsbfnLib
+  TimerLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiLib
+
+[Protocols]
+  gEfiUsbFunctionIoProtocolGuid                 ## PRODUCES
+
+[Depex]
+  TRUE

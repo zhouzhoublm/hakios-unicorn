@@ -1,0 +1,40 @@
+## @file
+#  USB serial console: CDC ACM on top of EFI_USBFN_IO_PROTOCOL.
+#
+#  Consumes the protocol UsbfnDwc3Dxe produces, so it loads after it; produces EFI_SERIAL_IO_PROTOCOL so
+#  the host's port shows up as a serial device in the firmware's own device model too.
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = UsbSerialDxe
+  FILE_GUID                      = 5C7A5F0E-9B31-4E0B-9E4E-2C6F3D1A8B55
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = InitUsbSerial
+
+[Sources]
+  UsbSerialDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  SiliciumPkg/SiliciumPkg.dec
+  unicornPkg/unicornPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  MemoryAllocationLib
+  TimerLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiLib
+
+[Protocols]
+  gEfiUsbFunctionIoProtocolGuid                 ## CONSUMES
+  gEfiSerialIoProtocolGuid                      ## PRODUCES
+
+[Depex]
+  gEfiUsbFunctionIoProtocolGuid

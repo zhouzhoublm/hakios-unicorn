@@ -4,11 +4,14 @@ iOS on Apple's XNU kernel, booted on a Xiaomi 12S Pro, with no Linux underneath.
 device repository for **unicorn** (SM8475, "cape", waipio family): its UEFI platform, the drivers that
 belong to this phone, its SoC layer, and what we learn bringing it up.
 
-> **Status, 2026-11-06 — stage 0.** This repository was made by deriving it from
+> **Status, 2026-11-06 — stage 0, first boots done.** This repository was made by deriving it from
 > [cotunjr/hakios-mayfly](https://github.com/cotunjr/hakios-mayfly) (the Xiaomi 12S port, the same SoC),
-> and its UEFI for unicorn is built and packs into a boot image. **Nothing has been started on the phone
-> yet**: every `status` line in `device.conf` says `missing` or `partial` and means it. The honest
-> next step is the first `fastboot boot` (docs/OPEN-ISSUES.md).
+> and its UEFI for unicorn is built and packs into a boot image. **It has now been started on the phone
+> three times**: ABL accepts and starts the image every time (0.43 s), and **nothing our code does reaches
+> USB** — no `xnuloader`, no device at all — before the phone resets itself and Android comes back at
+> ~60 s. So the port is blind until the loader's USB enumerates; docs/LOG-CHANNELS.md is the analysis of
+> which log channels this phone does and does not have, and the order to build them in. Every `status`
+> line in `device.conf` still says `missing` or `partial` and means it.
 
 ## What this phone is (from its own device tree, not from the 12S)
 
@@ -90,8 +93,12 @@ to Android: hold power + volume down; nothing in the boot chain was touched.
 | [docs/BOOT-ARGS.md](docs/BOOT-ARGS.md) | the boot arguments, and which of them this phone has actually been given |
 | [docs/FIRMWARE.md](docs/FIRMWARE.md) | which firmware files this port needs and where they come from |
 | [docs/OPEN-ISSUES.md](docs/OPEN-ISSUES.md) | what is broken or unknown, with the best lead for each |
+| [docs/LOG-CHANNELS.md](docs/LOG-CHANNELS.md) | what this phone can and cannot tell us when it fails to boot, measured, and the order to build the missing channels (tools/pc/boot-attempt.ps1 runs the loop) |
+| [docs/USB-BRINGUP.md](docs/USB-BRINGUP.md) | why nothing enumerates today (the loader asks the firmware for a USB device protocol this blob-free firmware does not build), the two routes to a channel, and this phone's own DWC3/eUSB2/NXP-repeater parameters |
+| [docs/USB-SERIAL.md](docs/USB-SERIAL.md) | the USB serial log: what uefi-pong / U-Boot / lk2nd already do on this class of hardware, and the stack chosen for unicorn (open DWC3 device DXE + four board functions + our class driver) |
 | [reference/](reference/) | what to pull from the phone, and how |
 | [tools/](tools/) | image build, run-and-collect-log, Android data collectors |
+| [xnuloader/](xnuloader/) | the USB serial console for the loader (`usbfn.c`, CDC ACM over `EFI_USBFN_IO_PROTOCOL`) and the four edits it needs in the common repository's `loader.c` |
 
 ## Legal
 

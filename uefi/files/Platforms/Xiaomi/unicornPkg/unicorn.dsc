@@ -78,11 +78,26 @@
   #
   ConfigurationMapLib|unicornPkg/Library/ConfigurationMapLib/ConfigurationMapLib.inf
 
+  #
+  # USB function (device mode): the board half of the generic DWC3 driver (docs/USB-SERIAL.md)
+  #
+  PlatformUsbfnLib|unicornPkg/Library/PlatformUsbfnLib/PlatformUsbfnLib.inf
+
 [Components]
   #
   # ACPI Tables
   #
   ingres/AcpiTables.inf
+
+  #
+  # USB function controller: produces EFI_USBFN_IO_PROTOCOL for the loader's fastboot and USB serial
+  #
+  unicornPkg/Drivers/UsbfnDwc3Dxe/UsbfnDwc3Dxe.inf
+
+  #
+  # The CDC ACM serial console on top of it (docs/USB-SERIAL.md)
+  #
+  unicornPkg/Drivers/UsbSerialDxe/UsbSerialDxe.inf
 
 [BuildOptions]
   # Same as mkxnuimg.py (payload_base) and the loader's LOADER_CFLAGS

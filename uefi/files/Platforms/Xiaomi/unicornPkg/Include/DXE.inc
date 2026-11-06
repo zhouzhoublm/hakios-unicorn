@@ -47,3 +47,16 @@
   INF MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
   INF MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 
+  #
+  # The USB *function* side (device mode): this is what the loader's fastboot -- and, next, the USB
+  # serial log -- run on. Nothing in MdeModulePkg provides it; docs/USB-SERIAL.md says where it comes
+  # from and what is ours (Library/PlatformUsbfnLib).
+  #
+  INF unicornPkg/Drivers/UsbfnDwc3Dxe/UsbfnDwc3Dxe.inf
+
+  #
+  # The class on top of it: a CDC ACM serial port, so the firmware can say what it is doing. It depends on
+  # the protocol above and installs EFI_SERIAL_IO_PROTOCOL (docs/USB-SERIAL.md).
+  #
+  INF unicornPkg/Drivers/UsbSerialDxe/UsbSerialDxe.inf
+
