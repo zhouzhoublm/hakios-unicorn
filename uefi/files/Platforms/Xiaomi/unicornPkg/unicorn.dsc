@@ -86,4 +86,4 @@
 
 [BuildOptions]
   # Same as mkxnuimg.py (payload_base) and the loader's LOADER_CFLAGS
-  *_*_*_CC_FLAGS = -DXNU_PAYLOAD_BASE=0xB0000000ULL
+  *_*_*_CC_FLAGS = -DXNU_PAYLOAD_BASE=0xBB000000ULL
