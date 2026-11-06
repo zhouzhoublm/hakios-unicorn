@@ -1,0 +1,361 @@
+diff --git a/BootShim/BootShim.S b/BootShim/BootShim.S
+index 4d208553..78b35d61 100644
+--- a/BootShim/BootShim.S
++++ b/BootShim/BootShim.S
+@@ -17,6 +17,124 @@ _StackSize:
+ #endif
+ 
+ _Start:
++#ifdef HAKIOS_GH_WDT_OFF
++  /*
++   * HakiOS: the Gunyah hypervisor's watchdog for this VM is left running by ABL (Linux's gh-watchdog pets it). Nothing
++   * in UEFI does, and about ten seconds in the phone is reset. VIRT_WDT_CONTROL (SMC 0x86000005) with 2 turns it
++   * off, as Linux's gh_wdt_stop() does; the XNU loader arms it again with its own timeout.
++   */
++  mov   x19, x1
++  movz  x0, #0x0005
++  movk  x0, #0x8600, lsl #16
++  mov   x1, #2
++  mov   x2, #0
++  mov   x3, #0
++  smc   #0
++#ifdef HAKIOS_WDT_PROBE
++  /* bring-up probe: blue if the hypervisor took the call (x0 == 0), magenta if not; then 15 s; then white; then stop */
++  mov   x20, x0
++  movz  w9, #0x00ff
++  movk  w9, #0xff00, lsl #16
++  cbz   x20, 1f
++  movz  w9, #0x00ff
++  movk  w9, #0xffff, lsl #16
++1:
++  movz  x7, #0xb800, lsl #16
++  ldr   x8, =(1080 * 2400)
++2:
++  str   w9, [x7], #4
++  subs  x8, x8, #1
++  b.ne  2b
++  dsb   sy
++  mrs   x10, cntfrq_el0
++  mov   x11, #15
++  mul   x10, x10, x11
++  mrs   x11, cntvct_el0
++  add   x10, x10, x11
++3:
++  mrs   x11, cntvct_el0
++  cmp   x11, x10
++  b.lo  3b
++  movz  w9, #0xffff
++  movk  w9, #0xffff, lsl #16
++  movz  x7, #0xb800, lsl #16
++  ldr   x8, =(1080 * 2400)
++4:
++  str   w9, [x7], #4
++  subs  x8, x8, #1
++  b.ne  4b
++  dsb   sy
++5:
++  wfe
++  b     5b
++#endif
++  mov   x1, x19
++#endif
++#ifdef HAKIOS_FB_TEST
++  /* HakiOS bring-up test: paint the panel's splash buffer red before anything else, to see whether it is scanned out */
++  ldr   x7, =HAKIOS_FB_TEST
++  ldr   x8, =(1080 * 2400)
++  movz  w9, #0x0000
++  movk  w9, #0xffff, lsl #16
++_FbFill:
++  str   w9, [x7], #4
++  subs  x8, x8, #1
++  b.ne  _FbFill
++  dsb   sy
++#ifdef HAKIOS_DELAY_S
++  /* wait HAKIOS_DELAY_S seconds on the virtual counter, then paint green: is anything counting since ABL? */
++  mrs   x10, cntfrq_el0
++  ldr   x11, =HAKIOS_DELAY_S
++  mul   x10, x10, x11
++  mrs   x11, cntvct_el0
++  add   x10, x10, x11
++_Delay:
++  mrs   x11, cntvct_el0
++  cmp   x11, x10
++  b.lo  _Delay
++  ldr   x7, =HAKIOS_FB_TEST
++  ldr   x8, =(1080 * 2400)
++  movz  w9, #0xff00
++  movk  w9, #0xff00, lsl #16
++_FbGreen:
++  str   w9, [x7], #4
++  subs  x8, x8, #1
++  b.ne  _FbGreen
++  dsb   sy
++#endif
++#endif
++#ifdef HAKIOS_HEARTBEAT
++  /*
++   * HakiOS bring-up: CPU7 draws one block per second down the right edge of the framebuffer, whatever CPU0 is doing.
++   * Blocks that keep coming after the log stops mean CPU0 is stuck and the panel is fine; blocks that stop with the
++   * log mean the panel or the whole SoC went away. The code runs from an area UEFI leaves unused.
++   */
++  mov   x19, x1
++  adr   x4, _Heart
++  adr   x6, _HeartEnd
++  ldr   x5, =HAKIOS_HEARTBEAT
++_HeartCopy:
++  ldr   w2, [x4], #4
++  str   w2, [x5], #4
++  cmp   x4, x6
++  b.lo  _HeartCopy
++  ldr   x5, =(HAKIOS_HEARTBEAT + 0x1000)
++  str   xzr, [x5]
++  dsb   sy
++  movz  x0, #0x0003
++  movk  x0, #0xc400, lsl #16
++  mov   x1, #0x700
++  ldr   x2, =HAKIOS_HEARTBEAT
++  mrs   x3, cntvct_el0
++  smc   #0
++  mov   x1, x19
++#ifdef HAKIOS_HEART_ONLY
++  /* no UEFI at all: does the panel keep updating when CPU0 only sleeps? */
++_HeartOnly:
++  wfe
++  b     _HeartOnly
++#endif
++#endif
+   mov   x4, x1
+   ldr   x5, =FD_BASE
+   cmp   x4, x5
+@@ -28,6 +146,27 @@ _CopyLoop:
+   stp   x2, x3, [x5], #16
+   subs  x6, x6, #16
+   b.ne  _CopyLoop
++
++#ifdef PAYLOAD_BASE
++  /* x4 now points just past the FD: an optional "XNUP" payload may follow */
++  ldr   w2, [x4]
++  movz  w3, #0x4E58
++  movk  w3, #0x5055, lsl #16
++  cmp   w2, w3
++  b.ne  _NoPayload
++  ldr   w6, [x4, #4]    /* Payload Size */
++  add   x6, x6, #23     /* Header + Round Up to 16 */
++  and   x6, x6, #~15
++  ldr   x5, =PAYLOAD_BASE   /* a literal, like FD_BASE: the SM8450 family's payload lies above 4 GiB */
++
++_PayloadLoop:
++  ldp   x2, x3, [x4], #16
++  stp   x2, x3, [x5], #16
++  subs  x6, x6, #16
++  b.ne  _PayloadLoop
++
++_NoPayload:
++#endif
+   ldr   x5, =FD_BASE
+ 
+ _Entry:
+@@ -36,6 +175,97 @@ _Entry:
+ _Dead:
+   b     _Dead
+ 
++#ifdef HAKIOS_HEARTBEAT
++  .balign 8             /* its literals stay aligned at the copy: with the MMU off a misaligned load faults */
++_Heart:                 /* x0 = counter at the start; position independent; MMU and caches off */
++  mrs   x9, cntfrq_el0
++  mov   x12, #-1
++  mov   x18, #0
++  mov   x13, #120       /* blocks in one column */
++  mov   x14, #10
++  ldr   x15, =4320      /* stride */
++_HeartLoop:
++  mrs   x10, cntvct_el0
++  sub   x10, x10, x0
++  udiv  x10, x10, x9
++  cmp   x10, x12
++  b.eq  _HeartLoop
++  mov   x12, x10
++#ifdef HAKIOS_HEART_COUNT
++  /* at HAKIOS_HEART_COUNT s read how many drivers CPU0 has loaded and report it the only way that gets out: reset that many seconds + count later */
++  cbnz  x18, 6f
++  cmp   x10, #HAKIOS_HEART_COUNT
++  b.lo  6f
++  ldr   x7, =(HAKIOS_HEARTBEAT + 0x1004)
++  ldr   w11, [x7]
++  mov   x7, #150
++  cmp   x11, x7
++  csel  x11, x11, x7, lo
++  add   x18, x11, #HAKIOS_HEART_COUNT
++6:
++  cbz   x18, 7f
++  cmp   x10, x18
++  b.lo  7f
++  movz  x0, #0x0009
++  movk  x0, #0x8400, lsl #16
++  smc   #0
++7:
++#endif
++#ifdef HAKIOS_HEART_RESET_S
++  /* is this CPU still alive when the screen no longer changes? The phone resetting right on time says it is */
++  cmp   x10, #HAKIOS_HEART_RESET_S
++  b.lo  4f
++  movz  x0, #0x0009
++  movk  x0, #0x8400, lsl #16
++  smc   #0
++4:
++#endif
++  udiv  x11, x10, x13
++  msub  x11, x11, x13, x10   /* row = seconds % 120 */
++  mov   x16, #20
++  mul   x11, x11, x16
++  mul   x11, x11, x15
++  movz  x7, #0xb800, lsl #16
++  add   x7, x7, x11
++  add   x7, x7, #(1000 * 4)  /* block at x = 1000 */
++  udiv  x11, x10, x14
++  msub  x11, x11, x14, x10
++  movz  w16, #0xff00         /* green, red every tenth second */
++  movk  w16, #0xff00, lsl #16
++  cbnz  x11, 1f
++  movz  w16, #0x0000
++  movk  w16, #0xffff, lsl #16
++1:
++  mov   x17, #16        /* rows */
++2:
++  mov   x8, x7
++  mov   x11, #60        /* pixels */
++3:
++  str   w16, [x8], #4
++  subs  x11, x11, #1
++  b.ne  3b
++  add   x7, x7, x15
++  subs  x17, x17, #1
++  b.ne  2b
++  dsb   sy
++#ifdef HAKIOS_HEART_KICK
++  /* a DSC command-mode panel only shows what the display engine sends it: start a frame on every CTL (CTL_START) */
++  movz  x7, #0x0ae1, lsl #16
++  movk  x7, #0x601c
++  mov   x8, #6
++  mov   w11, #1
++5:
++  str   w11, [x7]
++  add   x7, x7, #0x1000
++  subs  x8, x8, #1
++  b.ne  5b
++  dsb   sy
++#endif
++  b     _HeartLoop
++  .ltorg
++_HeartEnd:
++#endif
++
+ .text
+ .align 4
+ 
+diff --git a/Silicon/Silicium/SiliciumPkg/Library/BootManagerLib/BootManager.c b/Silicon/Silicium/SiliciumPkg/Library/BootManagerLib/BootManager.c
+index 9b18ddb1..5282eaeb 100644
+--- a/Silicon/Silicium/SiliciumPkg/Library/BootManagerLib/BootManager.c
++++ b/Silicon/Silicium/SiliciumPkg/Library/BootManagerLib/BootManager.c
+@@ -22,6 +22,7 @@
+ #include <Configuration/BootDevices.h>
+ 
+ #include "BootManager.h"
++#include "XnuLoader.h"
+ 
+ //
+ // Global Variables
+@@ -203,6 +204,9 @@ PlatformBootManagerUnableToBoot ()
+ {
+   EFI_STATUS Status;
+ 
++  // Nothing else to boot: hand over to the XNU loader (does not return)
++  XnuLoaderMain ();
++
+   // Execute Secondary Unable To Boot
+   DeviceBootManagerUnableToBoot ();
+ 
+diff --git a/Silicon/Silicium/SiliciumPkg/Library/BootManagerLib/BootManagerLib.inf b/Silicon/Silicium/SiliciumPkg/Library/BootManagerLib/BootManagerLib.inf
+index 2310dc61..4e3bbeb5 100644
+--- a/Silicon/Silicium/SiliciumPkg/Library/BootManagerLib/BootManagerLib.inf
++++ b/Silicon/Silicium/SiliciumPkg/Library/BootManagerLib/BootManagerLib.inf
+@@ -14,6 +14,7 @@
+ 
+ [Sources]
+   BootManager.c
++  XnuLoader.c
+   KeyCallback.c
+ 
+ [Packages]
+@@ -37,6 +38,8 @@
+   BootGraphicsLib
+   DevicePathLib
+   PrintLib
++  BaseLib
++  BaseMemoryLib
+ 
+ [Pcd]
+   gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut
+@@ -48,3 +51,5 @@
+   gKeypadDeviceProtocolGuid
+   gEfiGraphicsOutputProtocolGuid
+   gEfiSimpleTextInputExProtocolGuid
++  gEfiBlockIoProtocolGuid
++  gEfiPartitionInfoProtocolGuid
+diff --git a/Silicon/Silicium/SiliciumPkg/Library/FrameBufferSerialPortLib/FrameBufferSerialPortLib.c b/Silicon/Silicium/SiliciumPkg/Library/FrameBufferSerialPortLib/FrameBufferSerialPortLib.c
+index d2844e0a..33f0aba7 100644
+--- a/Silicon/Silicium/SiliciumPkg/Library/FrameBufferSerialPortLib/FrameBufferSerialPortLib.c
++++ b/Silicon/Silicium/SiliciumPkg/Library/FrameBufferSerialPortLib/FrameBufferSerialPortLib.c
+@@ -248,6 +248,8 @@ SerialPortWrite (
+   EFI_PHYSICAL_ADDRESS FbBase;
+   UINT64               FbLength;
+ 
++  CONST UINT8 *HakiosMessage = Buffer;
++
+   // Get Frame Buffer Memory
+   Status = GetFrameBufferMemory (&FbBase, &FbLength);
+   if (EFI_ERROR (Status)) {
+@@ -272,8 +274,15 @@ SerialPortWrite (
+     ArmEnableInterrupts ();
+   }
+ 
+-  // Flush Frame Buffer
+-  WriteBackInvalidateDataCacheRange ((VOID *)FbBase, FbLength);
++  // HakiOS: no flush of the whole 43 MB region for every message. The mapping is write-through, so nothing needs it,
++  // and on mayfly the display engine stopped scanning out under that load.
++
++  // HakiOS bring-up: count the writes where the boot shim's heartbeat CPU can read them
++  (*(volatile UINT32 *)0xA7001000)++;
++  if (HakiosMessage[0] == 'L' && HakiosMessage[8] == 'd' && HakiosMessage[9] == 'r') {
++    (*(volatile UINT32 *)0xA7001004)++;   // "Loading driver"
++  }
++  WriteBackInvalidateDataCacheRange ((VOID *)0xA7001000, 8);
+ 
+   return NumberOfBytes;
+ }
+diff --git a/Silicon/Silicium/SiliciumPkg/Sec/Sec.c b/Silicon/Silicium/SiliciumPkg/Sec/Sec.c
+index 8d586b35..511fc76d 100644
+--- a/Silicon/Silicium/SiliciumPkg/Sec/Sec.c
++++ b/Silicon/Silicium/SiliciumPkg/Sec/Sec.c
+@@ -44,7 +44,7 @@ PrintFirmwareVersion (VOID)
+ 
+   // Print UEFI Version Message
+   DEBUG ((EFI_D_WARN, "\n"));
+-  DEBUG ((EFI_D_WARN, "Project Silicium for %a %a\n",            FixedPcdGetPtr (PcdSmbiosSystemManufacturer), FixedPcdGetPtr (PcdSmbiosSystemModel)));
++  DEBUG ((EFI_D_WARN, "HakiOS UEFI (Mu-Silicium) for %a %a\n",            FixedPcdGetPtr (PcdSmbiosSystemManufacturer), FixedPcdGetPtr (PcdSmbiosSystemModel)));
+   DEBUG ((EFI_D_WARN, "Firmware Version %s Build at %a on %a\n", PcdGetPtr (PcdFirmwareVersionString), __TIME__, __DATE__));
+   DEBUG ((EFI_D_WARN, "\n"));
+ }
+diff --git a/Silicon/Silicium/SiliciumPkg/SiliciumPkg.dsc.inc b/Silicon/Silicium/SiliciumPkg/SiliciumPkg.dsc.inc
+index 00ec09e1..f13c7797 100644
+--- a/Silicon/Silicium/SiliciumPkg/SiliciumPkg.dsc.inc
++++ b/Silicon/Silicium/SiliciumPkg/SiliciumPkg.dsc.inc
+@@ -36,7 +36,7 @@
+   # Firmware Details
+   #
+   gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString|L"4.0"
+-  gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVendor|L"Project Silicium"
++  gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVendor|L"HakiOS"
+ 
+   #
+   # Memory

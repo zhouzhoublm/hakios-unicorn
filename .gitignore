@@ -1,0 +1,30 @@
+# Vendor firmware and UEFI drivers: proprietary, extracted from your own phone, never committed
+/uefi/files/Binaries/*/*
+!/uefi/files/Binaries/*/README.md
+/prebuilt/SILICIUM_UEFI.fd
+fw-*/
+*.mbn
+*.mdt
+*.b[0-9][0-9]
+*.tlv
+*.elf
+
+# boot images, payloads, Apple files, backups
+*.img
+*.bin
+*.apfs
+*.dmg
+*.ipsw
+*.im4p
+*.tar
+*.tar.gz
+backup/
+
+# raw, unscrubbed logs (scrub them first, see logs/README.md)
+/logs/raw/
+live
+final
+*.part
+
+.DS_Store
+__pycache__/

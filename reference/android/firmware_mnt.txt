@@ -1,0 +1,1 @@
+ls: /vendor/firmware_mnt/image/: Permission denied

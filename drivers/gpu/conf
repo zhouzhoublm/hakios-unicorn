@@ -1,0 +1,8 @@
+# devices/mayfly/drivers/gpu/conf: the Xiaomi 12S's GPU.
+# CONFIG_HAKIOS_<NAME>=y in a defconfig builds a driver into the kernel (docs/drivers-config.md).
+
+driver ADRENO7
+	file    bsd/dev/hakios.adreno7.c
+	requires GPU
+	help    the Adreno 730 of the SM8475 woken step by step (adreno7=N), and kept on for HakiosGPU with gpu=1.
+	help    Needs the GPU's firmware from the phone in fw-gpu/ (a730_sqe.fw, gmu_gen70000.bin, a730_zap.*)

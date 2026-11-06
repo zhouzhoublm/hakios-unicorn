@@ -1,0 +1,3 @@
+cd /sys/class/kgsl/kgsl-3d0; for f in gpu_model gpu_clock_stats gpu_available_frequencies freq_table_mhz max_gpuclk gpuclk gpu_busy_percentage devfreq/governor devfreq/available_frequencies devfreq/cur_freq devfreq/max_freq devfreq/min_freq max_pwrlevel min_pwrlevel num_pwrlevels thermal_pwrlevel; do echo "== $f"; cat $f 2>&1; done
+cd /sys/devices/system/cpu; for c in cpu0 cpu4 cpu7; do echo "== $c"; cat $c/cpufreq/scaling_available_frequencies $c/cpufreq/cpuinfo_max_freq $c/cpufreq/scaling_cur_freq $c/cpufreq/scaling_governor $c/cpufreq/related_cpus 2>&1; done
+for z in /sys/class/thermal/thermal_zone*; do echo "$z $(cat $z/type) $(cat $z/temp)"; done | head -40

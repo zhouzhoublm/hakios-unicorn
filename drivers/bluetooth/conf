@@ -1,0 +1,8 @@
+# devices/mayfly/drivers/bluetooth/conf: the Xiaomi 12S's Bluetooth.
+# CONFIG_HAKIOS_<NAME>=y in a defconfig builds a driver into the kernel (docs/drivers-config.md).
+
+driver QCABT
+	file    bsd/dev/hakios.qca6490bt.c
+	file    bsd/dev/hakios.qcabt_h4.c
+	file    bsd/dev/hakios.qcabt_shim.c
+	help    the Bluetooth half of the QCA6490 over its UART (qcabt=N): engine, loopback, chip version, firmware, HCI, BLE scan

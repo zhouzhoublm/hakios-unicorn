@@ -1,0 +1,8 @@
+# devices/mayfly/drivers/wifi/conf: the Xiaomi 12S's Wi-Fi.
+# CONFIG_HAKIOS_<NAME>=y in a defconfig builds a driver into the kernel (docs/drivers-config.md).
+
+driver QCA6490
+	file    bsd/dev/hakios.qca6490.c
+	requires QMI WIFI_STACK
+	help    the talk with the QCA6490's firmware (wifi_pcie=11): its memory, what it is, the board's files, m3, the modes.
+	help    The PCIe and MHI half is in hakios.adreno7.c for now. Needs fw-wifi/ from the phone

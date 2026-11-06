@@ -1,0 +1,329 @@
+00100000-002f41ff : 100000.clock-controller cc_base
+00880000-00883fff : 880000.i2c i2c@880000
+008c0000-008c1fff : 8c0000.qcom,qupv3_2_geni_se qcom,qupv3_2_geni_se@8c0000
+00994000-00997fff : 994000.i2c i2c@994000
+009c0000-009c1fff : 9c0000.qcom,qupv3_0_geni_se qcom,qupv3_0_geni_se@9c0000
+00a84000-00a87fff : a84000.i2c i2c@a84000
+00ac0000-00ac1fff : ac0000.qcom,qupv3_1_geni_se qcom,qupv3_1_geni_se@ac0000
+01500000-0151bfff : 1500000.interconnect interconnect@1500000
+01680000-0169e1ff : 1680000.interconnect interconnect@1680000
+016c0000-016ce27f : 16c0000.interconnect interconnect@16c0000
+016e0000-016fc07f : 16e0000.interconnect interconnect@16e0000
+01700000-0173107f : 1700000.interconnect interconnect@1700000
+01740000-0175f07f : 1740000.interconnect interconnect@1740000
+01d80000-01d81fff : 1d80000.ufsphy_mem phy_mem
+01d84000-01d86fff : 1d84000.ufshc ufs_mem
+01d88000-01d8ffff : 1d84000.ufshc ufs_ice
+01d90000-01d98fff : 1d84000.ufshc ufs_ice_hwkm
+03304000-03323fff : 3304000.bamdma bam
+03340000-0336bfff : 3340000.slim ctrl
+03c40000-03c571ff : 3c40000.interconnect interconnect@3c40000
+03d90000-03d99fff : 3d90000.clock-controller cc_base
+03da0000-03ddffff : 3da0000.kgsl-smmu base
+03de6000-03de601f : 3da0000.kgsl-smmu tcu-base
+03de9000-03de9fff : 3de9000.gfx_0_tbu base
+03ded000-03dedfff : 3ded000.gfx_1_tbu base
+08804000-08804fff : 8804000.sdhci hc_mem
+088e0000-088e1fff : 88e0000.qcom,msm-eud eud_base
+088e2000-088e2003 : 88e3000.hsphy eud_enable_reg
+088e3000-088e3153 : 88e3000.hsphy eusb2_phy_base
+0a60c100-0a60d93b : a600000.dwc3 dwc3@a600000
+0aaf0000-0aafffff : aaf0000.clock-controller clock-controller@aaf0000
+0ade0000-0adfffff : ade0000.clock-controller cc_base
+0af00000-0af1ffff : af00000.clock-controller clock-controller@af00000
+0af20000-0af2ffff : af20000.rsc drv-0
+0c222000-0c2221fe : c263000.thermal-sensor thermal-sensor@c263000
+0c223000-0c2231fe : c265000.thermal-sensor thermal-sensor@c265000
+0c263000-0c2631fe : c263000.thermal-sensor thermal-sensor@c263000
+0c265000-0c2651fe : c265000.thermal-sensor thermal-sensor@c265000
+0c276000-0c276003 : 88e3000.hsphy eud_detect_reg
+0c300000-0c3003ff : c300000.power-controller power-controller@c300000
+0c42d000-0c430fff : spmi-0 cnfg
+0c432000-0c435fff : spmi-1 cnfg
+0c4c0000-0c4cffff : spmi-0 intr
+0c4d0000-0c4dffff : spmi-1 intr
+0ed18000-0ed18fff : ed18000.qcom,ipcc qcom,ipcc@ed18000
+0f000000-0fffffff : f000000.pinctrl pinctrl@f000000
+10002000-10002fff : stm-base
+  10002000-10002fff : 10002000.stm stm-base
+10003000-10003fff : tpdm-base
+10004000-10004fff : tpda-base
+  10004000-10004fff : 10004000.tpda tpda-base
+1000f000-1000ffff : tpdm-base
+  1000f000-1000ffff : 1000f000.tpdm tpdm-base
+10010000-10010fff : cti@10010000
+  10010000-10010fff : 10010000.cti cti@10010000
+10041000-10041fff : funnel-base
+  10041000-10041fff : 10041000.funnel funnel-base
+10042000-10042fff : funnel-base
+  10042000-10042fff : 10042000.funnel funnel-base
+10045000-10045fff : funnel-base
+  10045000-10045fff : 10045000.funnel funnel-base
+10046000-10046fff : replicator-base
+  10046000-10046fff : 10046000.replicator replicator-base
+10048000-10048fff : tmc-base
+  10048000-10048fff : 10048000.tmc tmc-base
+1004e000-1004efff : replicator-base
+  1004e000-1004efff : 1004e000.replicator replicator-base
+1004f000-1004ffff : tmc-base
+  1004f000-1004ffff : 1004f000.tmc tmc-base
+10800000-10800fff : tpdm-base
+  10800000-10800fff : 10800000.tpdm tpdm-base
+10802000-10802fff : cti@10802000
+  10802000-10802fff : 10802000.cti cti@10802000
+10803000-10803fff : tpda-base
+  10803000-10803fff : 10803000.tpda tpda-base
+10804000-10804fff : funnel-base
+  10804000-10804fff : 10804000.funnel funnel-base
+1080b000-1080bfff : cti@1080b000
+  1080b000-1080bfff : 1080b000.cti cti@1080b000
+1080c000-1080cfff : funnel-base
+  1080c000-1080cfff : 1080c000.funnel funnel-base
+1080d000-1080dfff : funnel-base-dummy
+1082c000-1082cfff : tpdm-base
+  1082c000-1082cfff : 1082c000.tpdm tpdm-base
+10830000-10830fff : tpdm-base
+  10830000-10830fff : 10830000.tpdm tpdm-base
+10831000-10831fff : cti@10831000
+  10831000-10831fff : 10831000.cti cti@10831000
+10832000-10832fff : funnel-base
+  10832000-10832fff : 10832000.funnel funnel-base
+10841000-10841fff : tpdm-base
+  10841000-10841fff : 10841000.tpdm tpdm-base
+10844000-10844fff : tpdm-base
+  10844000-10844fff : 10844000.tpdm tpdm-base
+10845000-10845fff : cti@10845000
+  10845000-10845fff : 10845000.cti cti@10845000
+10846000-10846fff : funnel-base
+  10846000-10846fff : 10846000.funnel funnel-base
+10850000-10850fff : tpdm-base
+  10850000-10850fff : 10850000.tpdm tpdm-base
+10884000-10884fff : cti@10884000
+  10884000-10884fff : 10884000.cti cti@10884000
+10980000-10980fff : tpdm-base
+  10980000-10980fff : 10980000.tpdm tpdm-base
+10982000-10982fff : cti@10982000
+  10982000-10982fff : 10982000.cti cti@10982000
+10984000-10984fff : cti@10984000
+  10984000-10984fff : 10984000.cti cti@10984000
+10985000-10985fff : funnel-base
+  10985000-10985fff : 10985000.funnel funnel-base
+10986000-10986fff : funnel-base-dummy
+1098b000-1098bfff : cti@1098b000
+  1098b000-1098bfff : 1098b000.cti cti@1098b000
+109c0000-109c0fff : tpdm-base
+  109c0000-109c0fff : 109c0000.tpdm tpdm-base
+109c1000-109c1fff : tpda-base
+  109c1000-109c1fff : 109c1000.tpda tpda-base
+109c2000-109c2fff : funnel-base
+  109c2000-109c2fff : 109c2000.funnel funnel-base
+109d0000-109d0fff : tpdm-base
+  109d0000-109d0fff : 109d0000.tpdm tpdm-base
+10ac0000-10ac0fff : tpdm-base
+  10ac0000-10ac0fff : 10ac0000.tpdm tpdm-base
+10ac1000-10ac1fff : tpda-base
+  10ac1000-10ac1fff : 10ac1000.tpda tpda-base
+10ac2000-10ac2fff : funnel-base
+  10ac2000-10ac2fff : 10ac2000.funnel funnel-base
+10b00000-10b00fff : cti@10b00000
+  10b00000-10b00fff : 10b00000.cti cti@10b00000
+10b04000-10b04fff : funnel-base
+  10b04000-10b04fff : 10b04000.funnel funnel-base
+10b05000-10b05fff : tmc-base
+  10b05000-10b05fff : 10b05000.tmc tmc-base
+10b06000-10b06fff : replicator-base
+  10b06000-10b06fff : 10b06000.replicator replicator-base
+10b08000-10b08fff : tpda-base
+  10b08000-10b08fff : 10b08000.tpda tpda-base
+10b09000-10b09fff : tpdm-base
+  10b09000-10b09fff : 10b09000.tpdm tpdm-base
+10b0a000-10b0afff : tpdm-base
+  10b0a000-10b0afff : 10b0a000.tpdm tpdm-base
+10b0b000-10b0bfff : tpdm-base
+  10b0b000-10b0bfff : 10b0b000.tpdm tpdm-base
+10b0c000-10b0cfff : tpdm-base
+  10b0c000-10b0cfff : 10b0c000.tpdm tpdm-base
+10b0d000-10b0dfff : tpdm-base
+  10b0d000-10b0dfff : 10b0d000.tpdm tpdm-base
+10b0e000-10b0efff : tgu-base
+  10b0e000-10b0efff : 10b0e000.tgu tgu-base
+10b0f000-10b0ffff : tgu-base
+  10b0f000-10b0ffff : 10b0f000.tgu tgu-base
+10b10000-10b10fff : tgu-base
+  10b10000-10b10fff : 10b10000.tgu tgu-base
+10c08000-10c08fff : tpdm-base
+  10c08000-10c08fff : 10c08000.tpdm tpdm-base
+10c09000-10c09fff : cti@10c09000
+  10c09000-10c09fff : 10c09000.cti cti@10c09000
+10c0a000-10c0afff : cti@10c0a000
+  10c0a000-10c0afff : 10c0a000.cti cti@10c0a000
+10c0b000-10c0bfff : funnel-base
+  10c0b000-10c0bfff : 10c0b000.funnel funnel-base
+10c28000-10c28fff : tpdm-base
+  10c28000-10c28fff : 10c28000.tpdm tpdm-base
+10c29000-10c29fff : tpdm-base
+  10c29000-10c29fff : 10c29000.tpdm tpdm-base
+10c2a000-10c2afff : cti@10c2a000
+  10c2a000-10c2afff : 10c2a000.cti cti@10c2a000
+10c2b000-10c2bfff : cti@10c2b000
+  10c2b000-10c2bfff : 10c2b000.cti cti@10c2b000
+10c2e000-10c2efff : tpda-base
+  10c2e000-10c2efff : 10c2e000.tpda tpda-base
+10c2f000-10c2ffff : funnel-base
+  10c2f000-10c2ffff : 10c2f000.funnel funnel-base
+10c38000-10c38fff : tpdm-base
+  10c38000-10c38fff : 10c38000.tpdm tpdm-base
+10c39000-10c39fff : tpdm-base
+  10c39000-10c39fff : 10c39000.tpdm tpdm-base
+10c3a000-10c3afff : funnel-base
+  10c3a000-10c3afff : 10c3a000.funnel funnel-base
+10c60000-10c60fff : tpdm-base
+  10c60000-10c60fff : 10c60000.tpdm tpdm-base
+10c61000-10c61fff : cti@10c61000
+  10c61000-10c61fff : 10c61000.cti cti@10c61000
+10d02000-10d02fff : cti@10d02000
+  10d02000-10d02fff : 10d02000.cti cti@10d02000
+10d03000-10d03fff : cti@10d03000
+  10d03000-10d03fff : 10d03000.cti cti@10d03000
+10d04000-10d04fff : cti@10d04000
+  10d04000-10d04fff : 10d04000.cti cti@10d04000
+10d05000-10d05fff : funnel-base
+  10d05000-10d05fff : 10d05000.funnel funnel-base
+10d0c000-10d0cfff : cti@10d0c000
+  10d0c000-10d0cfff : 10d0c000.cti cti@10d0c000
+10d0d000-10d0dfff : cti@10d0d000
+  10d0d000-10d0dfff : 10d0d000.cti cti@10d0d000
+10d0e000-10d0efff : cti@10d0e000
+  10d0e000-10d0efff : 10d0e000.cti cti@10d0e000
+10d0f000-10d0ffff : funnel-base
+  10d0f000-10d0ffff : 10d0f000.funnel funnel-base
+10d20000-10d20fff : tpdm-base
+  10d20000-10d20fff : 10d20000.tpdm tpdm-base
+10d21000-10d21fff : cti@10d21000
+  10d21000-10d21fff : 10d21000.cti cti@10d21000
+10d22000-10d22fff : funnel-base
+  10d22000-10d22fff : 10d22000.funnel funnel-base
+10d30000-10d30fff : tpdm-base
+  10d30000-10d30fff : 10d30000.tpdm tpdm-base
+10d31000-10d31fff : cti@10d31000
+  10d31000-10d31fff : 10d31000.cti cti@10d31000
+10d32000-10d32fff : funnel-base
+  10d32000-10d32fff : 10d32000.funnel funnel-base
+12010000-12010fff : cti@12010000
+  12010000-12010fff : 12010000.cti cti@12010000
+12020000-12020fff : cti@12020000
+  12020000-12020fff : 12020000.cti cti@12020000
+12030000-12030fff : cti@12030000
+  12030000-12030fff : 12030000.cti cti@12030000
+12040000-12040fff : cti@12040000
+  12040000-12040fff : 12040000.cti cti@12040000
+12050000-12050fff : cti@12050000
+  12050000-12050fff : 12050000.cti cti@12050000
+12060000-12060fff : cti@112060000
+  12060000-12060fff : 12060000.cti cti@112060000
+12070000-12070fff : cti@12070000
+  12070000-12070fff : 12070000.cti cti@12070000
+12080000-12080fff : cti@12080000
+  12080000-12080fff : 12080000.cti cti@12080000
+13810000-13810fff : funnel-base
+  13810000-13810fff : 13810000.funnel funnel-base
+13860000-13860fff : tpdm-base
+  13860000-13860fff : 13860000.tpdm tpdm-base
+13861000-13861fff : tpdm-base
+  13861000-13861fff : 13861000.tpdm tpdm-base
+13862000-13862fff : cti@13862000
+  13862000-13862fff : 13862000.cti cti@13862000
+13863000-13863fff : tpda-base
+  13863000-13863fff : 13863000.tpda tpda-base
+138a0000-138a0fff : tpdm-base
+  138a0000-138a0fff : 138a0000.tpdm tpdm-base
+138b0000-138b0fff : tpdm-base
+  138b0000-138b0fff : 138b0000.tpdm tpdm-base
+138c0000-138c0fff : tpdm-base
+  138c0000-138c0fff : 138c0000.tpdm tpdm-base
+138e0000-138e0fff : cti@138e0000
+  138e0000-138e0fff : 138e0000.cti cti@138e0000
+138f0000-138f0fff : cti@138f0000
+  138f0000-138f0fff : 138f0000.cti cti@138f0000
+13900000-13900fff : cti@13900000
+  13900000-13900fff : 13900000.cti cti@13900000
+15000000-150fffff : 15000000.apps-smmu base
+151ce000-151ce01f : 15000000.apps-smmu tcu-base
+151d1000-151d1fff : 151d1000.anoc_1_tbu base
+151d5000-151d5fff : 151d5000.anoc_2_tbu base
+151d9000-151d9fff : 151d9000.cam_0_tbu base
+151dd000-151ddfff : 151dd000.cam_1_tbu base
+151e1000-151e1fff : 151e1000.compute_1_tbu base
+151e5000-151e5fff : 151e5000.compute_0_tbu base
+151e9000-151e9fff : 151e9000.lpass_tbu base
+151f1000-151f1fff : 151f1000.sf_0_tbu base
+151f5000-151f5fff : 151f5000.sf_1_tbu base
+151f9000-151f9fff : 151f9000.mdp_0_tbu base
+151fd000-151fdfff : 151fd000.mdp_1_tbu base
+16280000-163fffff : 10002000.stm stm-stimulus-base
+17421000-17421fff : arch_mem_timer
+17a20000-17a2ffff : 17a00000.rsc drv-2
+17d09400-17d097ff : 17d09400.sram sram@17D09400
+17d09804-17d09807 : 17d91000.qcom,cpufreq-hw pdmem-domain0
+17d09808-17d0980b : 17d91000.qcom,cpufreq-hw pdmem-domain1
+17d0980c-17d0980f : 17d91000.qcom,cpufreq-hw pdmem-domain2
+17d91000-17d91fff : 17d91000.qcom,cpufreq-hw freq-domain0
+17d92000-17d92fff : 17d91000.qcom,cpufreq-hw freq-domain1
+17d93000-17d93fff : 17d91000.qcom,cpufreq-hw freq-domain2
+19095000-190952ff : 19095000.llcc-pmu lagg-base
+19100000-191bb7ff : 19100000.interconnect interconnect@19100000
+19200000-1977ffff : 19200000.cache-controller llcc_base
+19a00000-19a7ffff : 19200000.cache-controller llcc_broadcast_base
+320c0000-320cffff : 320c0000.interconnect interconnect@320C0000
+60200000-63ffffff : qcom,pcie@1c00000
+  60200000-603fffff : PCI Bus 0000:01
+    60200000-603fffff : 0000:01:00.0
+      60200000-603fffff : cnss
+  60400000-605fffff : PCI Bus 0000:01
+  60600000-60600fff : 0000:00:00.0
+80000000-8063ffff : reserved
+80640000-807fffff : System RAM
+80800000-808f3fff : reserved
+808f4000-808fffff : System RAM
+80900000-851fffff : reserved
+85200000-856fffff : System RAM
+85700000-85dfffff : reserved
+85e00000-87ffffff : System RAM
+88000000-8b91bfff : reserved
+8b91c000-8b9fffff : System RAM
+8ba00000-a2dfffff : reserved
+a2e00000-a6b7ffff : System RAM
+a6b80000-a6e3ffff : reserved
+a6e40000-a6efffff : System RAM
+a6f00000-a6ffffff : reserved
+a7000000-dfffffff : System RAM
+  a7000000-a73fffff : reserved
+  a8000000-aa47ffff : Kernel code
+  aa480000-aa77ffff : reserved
+  aa780000-aaa8ffff : Kernel data
+  affff000-afffffff : reserved
+  b6649000-b6725fff : reserved
+  b684a000-b7ffefff : reserved
+  b8000000-baafffff : reserved
+  d5c00000-dfffffff : reserved
+e0000000-e0afffff : reserved
+e0b00000-e55f2fff : System RAM
+e55f3000-e56fffff : reserved
+  e55f3000-e55fbfff : soc:qrtr-gunyah trust_ui_vm_qrtr@e55f3000
+e5700000-e87fffff : System RAM
+  e5800000-e87fffff : reserved
+e8800000-e9ffffff : reserved
+f4600000-ffffffff : System RAM
+  f4800000-ffbfffff : reserved
+  ffffe000-ffffefff : reserved
+800000000-8374fffff : System RAM
+837b00000-8398fffff : System RAM
+840000000-a7fffffff : System RAM
+  a69b78000-a77dfffff : reserved
+  a77e0e000-a77e10fff : reserved
+  a77e11000-a77e11fff : reserved
+  a77e12000-a77e12fff : reserved
+  a77e13000-a77e22fff : reserved
+  a77e23000-a77e24fff : reserved
+  a77e25000-a77e46fff : reserved
+  a77e47000-a7fffffff : reserved

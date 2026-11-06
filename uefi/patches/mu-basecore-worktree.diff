@@ -1,0 +1,32 @@
+diff --git a/UefiCpuPkg/Library/CpuExceptionHandlerLib/AArch64/CpuExceptionHandlerLib.c b/UefiCpuPkg/Library/CpuExceptionHandlerLib/AArch64/CpuExceptionHandlerLib.c
+index 9116ba9d96..4268698818 100644
+--- a/UefiCpuPkg/Library/CpuExceptionHandlerLib/AArch64/CpuExceptionHandlerLib.c
++++ b/UefiCpuPkg/Library/CpuExceptionHandlerLib/AArch64/CpuExceptionHandlerLib.c
+@@ -258,6 +258,27 @@ CommonCExceptionHandler (
+   IN OUT EFI_SYSTEM_CONTEXT  SystemContext
+   )
+ {
++  //
++  // HakiOS (mayfly): after ABL the SPMI arbiter's channels that belong to other execution environments answer with a
++  // synchronous external abort, where stock UEFI, which runs before ABL's lockdown, may read them. Make such an access
++  // look like what a dead channel returns (all ones: "failed" in the status register) and let the driver carry on.
++  //
++  if (ExceptionType == EXCEPT_AARCH64_SYNCHRONOUS_EXCEPTIONS) {
++    EFI_SYSTEM_CONTEXT_AARCH64  *Ctx = SystemContext.SystemContextAArch64;
++
++    if (((Ctx->ESR >> 26) == 0x25) && ((Ctx->ESR & 0x3F) == 0x10) && (Ctx->FAR >= 0x0C400000) && (Ctx->FAR < 0x0C900000)) {
++      UINT32  Insn = *(UINT32 *)(UINTN)Ctx->ELR;
++      UINTN   Rt   = Insn & 0x1F;
++
++      if (((Insn & (1u << 22)) != 0) && (Rt != 31)) {
++        (&Ctx->X0)[Rt] = MAX_UINT64;
++      }
++
++      Ctx->ELR += 4;
++      return;
++    }
++  }
++
+   if ((UINTN)ExceptionType <= mMaxExceptionNumber) {
+     if (mExceptionHandlers[ExceptionType] != NULL) {
+       mExceptionHandlers[ExceptionType](ExceptionType, SystemContext);
