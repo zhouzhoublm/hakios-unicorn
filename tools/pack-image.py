@@ -82,8 +82,32 @@ def build_shim(fd_base, fd_size, payload_base):
         subprocess.run(cmd, cwd=shim_dir, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         p = os.path.join(shim_dir, "BootShim.bin")
         if os.path.isfile(p):
+            verify_shim(p)
             return p
     sys.exit("pack-image.py: BootShim did not build (need clang --target=aarch64-linux-gnu or aarch64-linux-gnu-gcc)")
+
+
+def verify_shim(path):
+    """`adr x1, _Payload` must point exactly at the end of BootShim.bin: that is where the FD starts.
+
+    The assembler puts the literal pool of `ldr x5, =FD_BASE` at the end of the section, which is also
+    where `_Payload` is; without a `.ltorg` before `_Payload` the binary is 16 bytes longer than the
+    address it copies from and every FD lands at FD_BASE shifted by 16 bytes (invalid FV -> the phone
+    resets with no display and no USB). devices/<dev>/uefi/files/BootShim/BootShim.S carries the fix.
+    """
+    data = open(path, "rb").read()
+    word = int.from_bytes(data[0:4], "little")
+    if (word & 0x9F000000) != 0x10000000:
+        return
+    imm = ((word >> 5) & 0x7FFFF) << 2 | ((word >> 29) & 3)
+    if imm & (1 << 20):
+        imm -= 1 << 21
+    target = imm
+    if target != len(data):
+        sys.exit(f"pack-image.py: BootShim.bin is {len(data):#x} bytes but copies the FD from {target:#x}: "
+                 f"the firmware volume would land at FD_BASE shifted by {len(data) - target} bytes. "
+                 f"BootShim.S needs `.ltorg` before _Payload (uefi/files/BootShim/BootShim.S).")
+    print(f"  shim   {len(data)} bytes, the FD starts exactly at _Payload ({target:#x})")
 
 
 def make_payload(args):

@@ -126,6 +126,29 @@ dtb   sha256 9a2e12e7bd92c98724a09c25584bdf41368efa5537e0457eadd1b4b6457e98f9
 
 What it does **not** prove: that the phone starts it. That is the next thing (docs/OPEN-ISSUES.md, 1).
 
+## The BootShim alignment trap (this port's first bug)
+
+The first image built for this phone loaded (`fastboot boot` said `Booting OKAY`) and then the phone
+reset into Android: no display, no `xnuloader`. The cause was in the shim, not in the firmware:
+
+`BootShim.S` computes where the firmware volume starts with `adr x1, _Payload`, and `ldr x5, =FD_BASE` /
+`ldr x6, =FD_SIZE` make the assembler emit a 16-byte **literal pool** at the end of the section — which is
+exactly where `_Payload` is. So `BootShim.bin` came out **16 bytes longer than the address it copies
+from**: every FD arrived at FD_BASE shifted by 16 bytes, its FV header (16 bytes of ZeroVector followed
+by the filesystem GUID) replaced by the two literals, and SEC faulted immediately.
+
+`uefi/files/BootShim/BootShim.S` in this repository is Mu-Silicium's file with HakiOS's XNUP-payload
+block **and `.ltorg` before `_Payload`**, which flushes the pool first and makes the FD's real position
+and the copy source the same address. `tools/pack-image.py` refuses to pack a shim that is not aligned:
+
+```sh
+aarch64-linux-gnu-objdump -D -b binary -m aarch64 BootShim.bin | sed -n '8p'   # adr x1, 0xXXX
+stat -c%s BootShim.bin                                                         # must be 0xXXX
+```
+
+This is HakiOS-wide (mayflyPkg would hit it too) and belongs in `hakios-uefi`; it is carried in this
+device repository because a device's `uefi/files/` is what a build copies last.
+
 ## The device tree
 
 `uefi/files/Resources/DTBs/unicorn.dtb` is built from source; the exact commands (`cpp` + `dtc` + two
